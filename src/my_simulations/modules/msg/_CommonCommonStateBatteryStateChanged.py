@@ -1,0 +1,1 @@
+/home/gaetan/code/imitation-learning-codebase/src/sim/ros/python3_ros_ws/devel/.private/bebop_msgs/lib/python3/dist-packages/bebop_msgs/msg/_CommonCommonStateBatteryStateChanged.py

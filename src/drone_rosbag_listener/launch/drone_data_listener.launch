@@ -1,0 +1,4 @@
+<launch>
+    <node pkg="drone_rosbag_listener" type="data_saver.py" 
+          name="datasaver" output="screen"/>
+</launch>

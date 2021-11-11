@@ -1,0 +1,136 @@
+<?xml version="1.0"?>
+<launch>
+    <!--######################## GENERAL ########################-->
+    <arg name="random_seed" default="1234"/>
+    <param name="random_seed" value="$(arg random_seed)"/>
+    <arg name="output_path" default="/tmp"/>
+    <arg name="paused" default="true"/>
+    <param name="output_path" value="$(arg output_path)"/>
+    
+    <!--######################## GAZEBO ########################-->
+    <arg name="gazebo" default="false"/>
+    <group if="$(arg gazebo)">
+        <include file="$(find gazebo_ros)/launch/empty_world.launch">
+            <arg name="world_name" value="$(find my_simulations)/worlds/logo_world.world"/>
+            <arg name="paused" default="$(arg paused)"/>
+            <arg name="gui" value="true"/>
+            <arg name="headless" default="true"/>
+        </include>
+    </group>
+
+    <!--######################## ROBOTS ########################-->
+    <arg name="robot_name" default="default"/>
+    <rosparam command="load" file="$(find my_simulations)/drone_model/drone_sim_down_cam.yml" ns="robot"/>
+
+    <arg name="x_pos" default="0"/>
+    <arg name="y_pos" default="0"/>
+    <arg name="z_pos" default="0."/>
+    <arg name="yaw_or" default="0"/>
+    <!--    Distance between two drones used for double_drone_sim-->
+    <arg name="distance_tracking_fleeing_m" default="3"/>
+    <arg name="starting_height" default="1"/>
+    <param name="/starting_height" value="$(arg starting_height)"/>
+
+    <group if="$(eval arg('robot_name') == 'drone_sim_down_cam' or arg('robot_name') == 'drone_sim_forward_cam' or arg('robot_name') == 'drone_sim')">
+        <arg name="model_name" default="$(arg robot_name)"/>
+        <!-- Spawn simulated quadrotor uav -->
+        <include file="$(find hector_quadrotor_gazebo)/launch/spawn_quadrotor.launch">
+            <!-- Note: do not change quadrotor model with model argument as then pose estimation fails to start and /ground_truth/state will not be published on which fsm.py depends to start the simulation.-->
+            <arg name="x" value="$(arg x_pos)"/>
+            <arg name="y" value="$(arg y_pos)"/>
+            <arg name="z" value="$(arg z_pos)"/>
+            <arg name="Y" default="$(arg yaw_or)"/>
+            <arg name="model" default="$(find my_simulations)/urdf/$(arg model_name).gazebo.xacro"/>
+        </include>
+    </group>
+
+    <!--######################## HELPER NODES ########################-->
+    
+
+    <arg name="control_mapping" default="false"/>
+    <arg name="control_mapping_config" default="default"/>
+    <rosparam command="load"
+                  file="$(find my_simulations)/control_mapping/$(arg control_mapping_config).yml"
+                  ns="control_mapping"/>
+    <group if="$(arg control_mapping)">
+        <node pkg="my_simulations"
+              name="control_mapping"
+              type="control_mapping.py"
+              output="screen"
+              launch-prefix="bash -c 'sleep 6; $0 $@' "/>
+    </group>
+
+    <arg name="waypoint_indicator" default="false"/>
+    <group if="$(arg waypoint_indicator)">
+        <node pkg="my_simulations"
+              name="waypoint_indicator"
+              type="waypoint_indicator.py"
+              output="screen"/>
+    </group>
+
+    <arg name="robot_mapping" default="false"/>
+    <group if="$(arg robot_mapping)">
+        <node pkg="my_simulations"
+              name="robot_mapping"
+              type="robot_mapping.py"
+              output="screen"/>
+    </group>
+
+    <arg name="robot_display" default="false"/>
+    <group if="$(arg robot_display)">
+        <node pkg="my_simulations"
+              name="robot_display"
+              type="robot_display.py"
+              output="screen"/>
+    </group>
+
+    <arg name="modified_state_publisher" default="false"/>
+    <arg name="modified_state_publisher_mode" default="CombinedGlobalPoses"/>
+    <param name="/modified_state_publisher/mode" value="$(arg modified_state_publisher_mode)"/>
+    <group if="$(arg modified_state_publisher)">
+        <node pkg="my_simulations"
+              name="modified_state_publisher"
+              type="modified_state_publisher.py"
+              output="screen"/>
+    </group>
+
+    <arg name="modified_state_frame_visualizer" default="false"/>
+    <group if="$(arg modified_state_frame_visualizer)">
+        <node pkg="my_simulations"
+              name="modified_state_frame_visualizer"
+              type="modified_state_frame_visualizer.py"
+              output="screen"/>
+    </group>
+
+    <!--######################## ACTOR NODES ########################-->
+    
+
+    <arg name="keyboard" default="false"/>
+    <group if="$(arg keyboard)">
+        <arg name="keyboard_config_file_path_with_extension"
+             default="$(find my_simulations)/actor/keyboard_$(arg robot_name).yml"/>
+        <rosparam command="load"
+                  file="$(arg keyboard_config_file_path_with_extension)"
+                  ns="/actor/keyboard"/>
+        <node pkg="my_simulations"
+              name="teleop_twist_keyboard"
+              type="teleop_twist_keyboard.py"
+              output="screen"
+              ns="/actor/keyboard"/>
+    </group>
+
+    <arg name="ros_expert" default="false"/>
+    <group if="$(arg ros_expert)">
+        <arg name="ros_expert_config_file_path_with_extension"
+             default="$(find my_simulations)//actor/ros_expert.yml"/>
+        <rosparam command="load"
+                  file="$(arg ros_expert_config_file_path_with_extension)"
+                  ns="/actor/ros_expert"/>
+        <node pkg="my_simulations"
+              name="ros_expert"
+              type="ros_expert.py"
+              output="screen"
+              ns="/actor/ros_expert"/>
+    </group>
+
+</launch>

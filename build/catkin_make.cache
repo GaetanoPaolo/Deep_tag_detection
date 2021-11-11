@@ -1,0 +1,2 @@
+drone_rosbag_listener:my_simulations
+-DCATKIN_DEVEL_PREFIX=/home/gaetan/code/simulation_ws/devel -DCMAKE_INSTALL_PREFIX=/home/gaetan/code/simulation_ws/install -G Unix Makefiles
