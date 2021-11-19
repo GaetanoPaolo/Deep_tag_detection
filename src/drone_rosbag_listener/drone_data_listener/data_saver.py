@@ -11,13 +11,14 @@ from std_msgs.msg import Empty
 import numpy as np
 import rospy
 from geometry_msgs.msg import Twist, PointStamped, Point, PoseStamped
+from tf2_msgs.msg import TFMessage
 from std_msgs.msg import String, Float32MultiArray, Empty
 from sensor_msgs.msg import Image
 from nav_msgs.msg import Odometry
 from rosgraph_msgs.msg import Clock
 import custom_utils
 
-SIM = False
+SIM = True
 
 class Datasaver:
     def __init__(self, output_dir):
@@ -35,6 +36,8 @@ class Datasaver:
             rospy.Subscriber('/ground_truth_to_tf/pose',
                                 PoseStamped,
                                 callback=self._pose_callback)
+            rospy.Subscriber('/tf', TFMessage,callback=self._tf_callback)
+            rospy.Subscriber('/tf_static', TFMessage,callback=self._tfstatic_callback)
             self.size = {'height': 200, 'width': 200, 'depth': 3}
         else:
             rospy.Subscriber('/camera/fisheye1/image_raw',
@@ -60,7 +63,14 @@ class Datasaver:
 
     def _reset(self):
         self._episode_id += 1
-        self._hdf5_data = {"observation": [], "position": [],"orientation": [], 'image_time': [], 'pose_time': []}
+        if SIM:
+            self._hdf5_data = {"observation": [], "position": [],"orientation": [],"pos_base_footprint": [],"quat_base_footprint": [], 
+            'pos_base_stabilized':[],'quat_base_stabilized':[],'pos_base_link':[],'quat_base_link':[],
+            'pos_down_link':[],'quat_down_link':[],'pos_down_optical_frame':[],'quat_down_optical_frame':[],
+            'image_time': [], 'pose_time': []}
+        else:
+            self._hdf5_data = {"observation": [], "position": [],"orientation": [], 'image_time': [], 'pose_time': []}
+            
     
     def _camera_callback(self, msg):
         h = getattr(msg, 'header')
@@ -97,6 +107,25 @@ class Datasaver:
         orientation_vect = [quaternion.x, quaternion.y, quaternion.z, quaternion.w]
         self._hdf5_data["position"].append(pos_vect)
         self._hdf5_data["orientation"].append(orientation_vect)
+    def _tf_callback(self,msg):
+        transfs = getattr(msg, 'transforms')
+        for k in range(0,3):
+            cur_transf = transfs[k]
+            cur_pos = cur_transf.transform.translation
+            cur_quaternion = cur_transf.transform.rotation
+            cur_child_frame = cur_transf.child_frame_id
+            self._hdf5_data["pos_"+cur_child_frame].append([cur_pos.x, cur_pos.y, cur_pos.z])
+            self._hdf5_data["quat_"+cur_child_frame].append([cur_quaternion.x, cur_quaternion.y, cur_quaternion.z, cur_quaternion.w])
+
+    def _tfstatic_callback(self,msg):
+        transfs = getattr(msg, 'transforms')
+        for k in range(0,2):
+            cur_transf = transfs[k]
+            cur_pos = cur_transf.transform.translation
+            cur_quaternion = cur_transf.transform.rotation
+            cur_child_frame = cur_transf.child_frame_id
+            self._hdf5_data["pos_"+cur_child_frame].append([cur_pos.x, cur_pos.y, cur_pos.z])
+            self._hdf5_data["quat_"+cur_child_frame].append([cur_quaternion.x, cur_quaternion.y, cur_quaternion.z, cur_quaternion.w])
     def run(self):
         rate = rospy.Rate(100)
         while not rospy.is_shutdown() and len(rospy.get_published_topics()) > 2:
@@ -105,7 +134,7 @@ class Datasaver:
 print(__name__)
 if __name__ == '__main__':
     print('protocol started')
-    output_directory = '/home/gaetan/data/hdf5/landing_T265_001'
+    output_directory = '/home/gaetan/data/hdf5/rec_all_topics'
     data_saver = Datasaver(output_dir=output_directory)
     print('Datasaver_created')
     data_saver.run()
