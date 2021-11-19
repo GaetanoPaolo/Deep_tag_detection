@@ -21,69 +21,56 @@ image_time = np.array(dset.get('image_time'))
 pose_time = np.array(dset.get('pose_time'))
 #rel_pos = pos
 pos_size = pos.shape
-for i in range(0,200):
-    print(str(image_time[i,:])+str(pose_time[i,:])+str(pos[i,:]))
 
 # define new dict for hdf5 storage
 hdf5_data = {"observation": [], "position": [], "orientation": [],"relative_position": [],'image_time': [], 'pose_time': []}
 
 #check which timestamps are equal and synchronize images and poses
 if image_time.shape[0] < pose_time.shape[0]:
-    it_len = image_time.shape[0]
+    it_len1 = image_time.shape[0]
     long_time = pose_time
     short_time = image_time
+    it_len2 = pose_time.shape[0]
     img_short = 1
 else:
-    it_len = pose_time.shape[0]
+    it_len1 = pose_time.shape[0]
     long_time = image_time
     short_time = pose_time
     img_short = 0
 #it_len = image_time.shape[0]
 first = 0
-for i in range(0,it_len):
-    # if i < 100:
-    #     print(image_time[i,:],'____',pose_time[i,:])
-        #print(np.round(image_time[i,0]/(10**8),1))
+for i in range(0,it_len1):
     cur_ref_time_ns = np.round(short_time[i,0]/(10**8),1)
     cur_ref_time_ms = np.round(short_time[i,1]/(10**(-7)),2)
     cur_ref_time = [cur_ref_time_ns,cur_ref_time_ms]
-    count = -1
-    #if cur_ref_time_ns > 1.0:
-    odom_time_ns = np.round(long_time[i,0]/(10**8),1)
-    odom_time_ms = np.round(long_time[i,1]/(10**(-7)),2)
-    odom_time = [odom_time_ns, odom_time_ms]
-    # if i < 10:
-    #     print(cur_ref_time,'____',odom_time)
-    while cur_ref_time != odom_time and i+count < pos_size[0]-1:
-        # if i < 10:
-        #     print(cur_ref_time,'____',odom_time)
-        print(cur_ref_time, odom_time)
-        time.sleep(2)
-        count += 1
-        odom_time = [np.round(long_time[i+count,0]/(10**8),1),np.round(long_time[i+count,1]/(10**(-7)),2)]
+    for j in range(0,it_len2):
+        odom_time_ns = np.round(long_time[j,0]/(10**8),1)
+        odom_time_ms = np.round(long_time[j,1]/(10**(-7)),2)
+        odom_time = [odom_time_ns, odom_time_ms]
+        if cur_ref_time == odom_time:
+            print(i, it_len1-1)
+            #time.sleep(2)
+            hdf5_data["pose_time"].append(long_time[j,:])
+            hdf5_data["image_time"].append(short_time[i,:])
+            if img_short == 1:
+                hdf5_data["observation"].append(imgs[i,:,:,:])
+                hdf5_data["position"].append(pos[j,:])
+                hdf5_data["orientation"].append(quat[j,:])
+                if first == 0:
+                    pos_ref = pos[j,:]
+                    first += 1
+                rel_pos = pos[j,:] - pos_ref
+                hdf5_data["relative_position"].append(rel_pos)
+            else:
+                hdf5_data["observation"].append(imgs[j,:,:,:])
+                hdf5_data["position"].append(pos[i,:]) 
+                hdf5_data["orientation"].append(quat[i,:]) 
+                if first == 0:
+                    pos_ref = pos[i,:]
+                    first += 1
+                rel_pos = pos[i,:] - pos_ref
+                hdf5_data["relative_position"].append(rel_pos)
 
-    hdf5_data["pose_time"].append(long_time[i+count,:])
-    hdf5_data["image_time"].append(short_time[i,:])
-    if img_short == 1:
-        hdf5_data["observation"].append(imgs[i,:,:,:])
-        hdf5_data["position"].append(pos[i+count,:])
-        hdf5_data["orientation"].append(quat[i+count,:])
-        if first == 0:
-            pos_ref = pos[i+count,:]
-            first += 1
-        rel_pos = pos[i+count,:] - pos_ref
-        hdf5_data["relative_position"].append(rel_pos)
-    else:
-        hdf5_data["observation"].append(imgs[i+count,:,:,:])
-        hdf5_data["position"].append(pos[i,:]) 
-        hdf5_data["orientation"].append(quat[i,:]) 
-        if first == 0:
-            pos_ref = pos[i,:]
-            first += 1
-        rel_pos = pos[i,:] - pos_ref
-        hdf5_data["relative_position"].append(rel_pos)
-#print(image_time[200:400,:],pose_time[200:400,:],pos[200:400,:])        
-        # hdf5_data["relative_position"].append(rel_pos[i,:,])
 print('Items in group dict',list(hdf5_data.keys()))
 #dump the new dict in new hdf5 file
 def dump(output_dir,hdf5_data):
@@ -97,7 +84,7 @@ def dump(output_dir,hdf5_data):
             )
         hdf5_file.close() 
 
-#dump(current_dir,hdf5_data)
+dump(current_dir,hdf5_data)
 #delete the previous dataset
 # os.remove("/home/gaetan/data/hdf5/test_sim_flight/data3.hdf5")
 # print("File Removed!")
