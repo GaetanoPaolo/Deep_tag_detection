@@ -21,9 +21,10 @@ corn = np.array(dset.get('corners'))
 size = imgs.shape
 
 #displaying indicated image + corresponding position
-current_pos = 1000
+current_pos = 700
 cur_img = imgs[current_pos,:,:,:]
 cur_corn = corn[current_pos,:,:]
+print(cur_corn)
 red = [1,0,0]
 size_corn = cur_corn.shape
 for i in range(0,size_corn[0]):
