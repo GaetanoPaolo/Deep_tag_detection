@@ -6,7 +6,9 @@
       <visual name='main_Visual'>
         <geometry>
           <box>
-            <size>0.350479 0.25 0.001</size>
+            <!-- <size>0.350479 0.25 0.001</size> -->
+            <size>1.05 0.75 0.001</size>
+            <!-- inner logo dim: -->
           </box>
         </geometry>
            <material>

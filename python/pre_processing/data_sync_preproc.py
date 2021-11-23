@@ -10,7 +10,7 @@ import cd_harris
 
 # load all the necessary data from the hdf5 file
 #f = h5py.File('/home/gaetan/data/hdf5/test_sim_flight/data3.hdf5', 'r')
-current_dir = '/home/gaetan/data/hdf5/rec_all_topics/'
+current_dir = '/home/gaetan/data/hdf5/logo_correct_size/'
 f = h5py.File(current_dir+'data4.hdf5', 'r')
 base_items = list(f.items())
 print('Groups:',base_items)
@@ -80,9 +80,12 @@ for i in range(0,it_len1):
                     if SIM:
                         std_corners = [[0,0],[0,0],[0,0],[0,0]]
                         corn = cd_harris.cornerHarris(140,imgs[i,:,:,:]*255)
-                        for t in range(0,len(corn)):
+                        if len(corn) > 4:
+                            rn = 4
+                        else:
+                            rn = len(corn)
+                        for t in range(0,rn):
                             std_corners[t] = corn[t]
-                        #print(len(std_corners))
                         hdf5_data["corners"].append(np.array(std_corners))
                         hdf5_data["pos_base_footprint"].append(pos_base_footprint[j,:])
                         hdf5_data["quat_base_footprint"].append(quat_base_footprint[j,:])
