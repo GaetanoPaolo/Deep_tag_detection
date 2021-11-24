@@ -59,7 +59,9 @@ plt.imshow(ORB_matches),plt.show()
 # plt.imshow(img),plt.show()
 
 #locating keypoints on template in 3D coordinates
+#1) preparing variables
 size = logo_temp.shape
+img_size = src_gray.shape
 print(size)
 vert_ratio = 0.985/size[0]
 horiz_ratio = 0.68/size[1]
@@ -68,13 +70,26 @@ y_origin = round(size[1]/2)
 pt_origin = np.array([int(x_origin), int(y_origin)])
 print(pt_origin)
 pos3d = []
+pos2d = []
+#2) approximating camera parameters, will be approximated again during solvepnp
+# if result incorrect => calibrate camera_
+fx = 100
+fy = 100
+K = np.array([[fx,0,img_size[1]/2],
+                [0,fy,img_size[0]/2],
+                [0,0,1]])
 for m in range(10,300):
     pt_idx = matches[0].imgIdx
     temp_coord = kp_temp[pt_idx].pt
+    target_coord = kp_target[pt_idx].pt
     rel_pos_px = pt_origin - np.array(temp_coord)
-    rel_pos_3d = np.array([rel_pos_px[0]/vert_ratio,rel_pos_px[1]/horiz_ratio,0.001])
+    rel_pos_3d = (rel_pos_px[0]/vert_ratio,rel_pos_px[1]/horiz_ratio,0.001)
     pos3d.append(rel_pos_3d)
-print(len(pos3d))
+    pos2d.append(tuple(target_coord))
+#apply solvepnp: https://learnopencv.com/head-pose-estimation-using-opencv-and-dlib/
+dist_coeffs = np.zeros((4,1))
+(suc,rot,trans) = cv.solvePnP(np.array(pos3d), np.array(pos2d), K, dist_coeffs, flags=cv.SOLVEPNP_ITERATIVE)
+
     
     
 
