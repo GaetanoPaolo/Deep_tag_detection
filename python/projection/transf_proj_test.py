@@ -4,6 +4,7 @@ import os
 import numpy as np
 import h5py
 import transform_mat
+import proj
 
 # load the necessary data 
 f = h5py.File('/home/gaetan/data/hdf5/correct_baselink_gt/data4_labelled.hdf5', 'r')
@@ -53,7 +54,7 @@ c0_world = np.array([[0],
                     [1]])
 #Define the observed image array index
 #List of indices with visible logo: 150,560,1000
-observed_pos =300
+observed_pos =560
 
 #calculating focal lengths of camera
 horizontal_field_of_view = (80 * img_size[2]/img_size[1]) * 3.14 / 180
@@ -88,7 +89,10 @@ for i in range(0,it_len):
     c_proj = np.matmul(K,c_cam[0:3,:])
     proj_array.append(c_proj[0:2,:])
 print(proj_array[observed_pos])
-
+# testing result of the separate function
+c_cam2, p_cam = proj.corner_proj(imgs,quat[observed_pos,:], pos[observed_pos,:],quat_down_link,pos_down_link,quat_down_optical_frame,pos_down_optical_frame)
+print(c_cam2)
+print(p_cam)
 #setting the corner points of the logo to red color
 cur_img = imgs[observed_pos,:,:,:]
 cur_proj = proj_array[observed_pos]
@@ -100,9 +104,8 @@ for j in range(0,c_size[1]):
         x_pix = int(np.round(cur_proj[0,j],0))
         y_pix = int(np.round(cur_proj[1,j],0))
         keypts.append((int(x_pix),int(y_pix)))
+print(keypts)
 cv.drawContours(cur_img,[np.array(keypts)],0,(255,0,0),1)
-print(image_time[observed_pos,:])
-print(pose_time[observed_pos,:])
 #display the modified image
 myplot = plt.imshow(cur_img)
 plt.title('Current position'+str(pos[observed_pos,:]))

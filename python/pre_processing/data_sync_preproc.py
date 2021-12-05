@@ -4,9 +4,8 @@ import os
 import numpy as np
 import h5py
 import time
+import proj
 import det_logo_image
-import cd_harris
-
 
 # load all the necessary data from the hdf5 file
 #f = h5py.File('/home/gaetan/data/hdf5/test_sim_flight/data3.hdf5', 'r')
@@ -37,7 +36,7 @@ if SIM:
     quat_down_link = np.array(dset.get("quat_down_link"))
     pos_down_optical_frame = np.array(dset.get("pos_down_optical_frame"))
     quat_down_optical_frame = np.array(dset.get("quat_down_optical_frame"))
-    hdf5_data = {"observation": [], "position": [],"orientation": [],"corners":[],"pos_base_footprint": [],"quat_base_footprint": [], 
+    hdf5_data = {"observation": [], "position": [],"orientation": [],"corners":[],"pos_cam_world":[],"pos_base_footprint": [],"quat_base_footprint": [], 
             'pos_base_stabilized':[],'quat_base_stabilized':[],'pos_base_link':[],'quat_base_link':[],
             'pos_down_link':[],'quat_down_link':[],'pos_down_optical_frame':[],'quat_down_optical_frame':[],
             'image_time': [], 'pose_time': [],"relative_position": []}
@@ -79,21 +78,24 @@ for i in range(0,it_len1):
                     hdf5_data["position"].append(pos[j,:])
                     hdf5_data["orientation"].append(quat[j,:])
                     if SIM:
-                        std_corners = [[0,0],[0,0],[0,0],[0,0]]
-                        corn = cd_harris.cornerHarris(140,imgs[i,:,:,:]*255)
-                        if len(corn) > 4:
-                            rn = 4
-                        else:
-                            rn = len(corn)
-                        for t in range(0,rn):
-                            std_corners[t] = corn[t]
-                        hdf5_data["corners"].append(np.array(std_corners))
+                        # std_corners = [[0,0],[0,0],[0,0],[0,0]]
+                        # corn = cd_harris.cornerHarris(140,imgs[i,:,:,:]*255)
+                        # if len(corn) > 4:
+                        #     rn = 4
+                        # else:
+                        #     rn = len(corn)
+                        # for t in range(0,rn):
+                        #     std_corners[t] = corn[t]
+                        
                         hdf5_data["pos_base_footprint"].append(pos_base_footprint[j,:])
                         hdf5_data["quat_base_footprint"].append(quat_base_footprint[j,:])
                         hdf5_data['pos_base_stabilized'].append(pos_base_stabilized[j,:])
                         hdf5_data['quat_base_stabilized'].append(quat_base_stabilized[j,:])
                         hdf5_data['pos_base_link'].append(pos_base_link[j,:])
                         hdf5_data['quat_base_link'].append(quat_base_link[j,:])
+                        corn, p_cam = proj.corner_proj(imgs,quat[j,:], pos[j,:],quat_down_link,pos_down_link,quat_down_optical_frame,pos_down_optical_frame)
+                        hdf5_data["corners"].append(np.array(corn))
+                        hdf5_data["pos_cam_world"].append(np.array(p_cam))
                     if first == 0:
                         pos_ref = pos[j,:]
                         first += 1
@@ -106,18 +108,20 @@ for i in range(0,it_len1):
                     hdf5_data["position"].append(pos[i,:]) 
                     hdf5_data["orientation"].append(quat[i,:]) 
                     if SIM:
-                        std_corners = [[0,0],[0,0],[0,0],[0,0]]
-                        corn = cd_harris.cornerHarris(140,imgs[j,:,:,:]*255)
-                        for t in range(0,len(corn)):
-                            std_corners[t] = corn[t]
+                        # std_corners = [[0,0],[0,0],[0,0],[0,0]]
+                        # corn = cd_harris.cornerHarris(140,imgs[j,:,:,:]*255)
+                        # for t in range(0,len(corn)):
+                        #     std_corners[t] = corn[t]
                         #print(len(std_corners))
-                        hdf5_data["corners"].append(np.array(std_corners))
                         hdf5_data["pos_base_footprint"].append(pos_base_footprint[i,:])
                         hdf5_data["quat_base_footprint"].append(quat_base_footprint[i,:])
                         hdf5_data['pos_base_stabilized'].append(pos_base_stabilized[i,:])
                         hdf5_data['quat_base_stabilized'].append(quat_base_stabilized[i,:])
                         hdf5_data['pos_base_link'].append(pos_base_link[i,:])
                         hdf5_data['quat_base_link'].append(quat_base_link[i,:])
+                        corn, p_cam = proj.corner_proj(imgs,quat[i,:], pos[i,:],quat_down_link,pos_down_link,quat_down_optical_frame,pos_down_optical_frame)
+                        hdf5_data["corners"].append(np.array(corn))
+                        hdf5_data["pos_cam_world"].append(np.array(p_cam))
                     if first == 0:
                         pos_ref = pos[i,:]
                         first += 1
@@ -128,7 +132,7 @@ print('Items in group dict',list(hdf5_data.keys()))
 #dump the new dict in new hdf5 file
 def dump(output_dir,hdf5_data):
         print('stored data in',output_dir)
-        output_hdf5_path = output_dir + '/data4_labelled' + '.hdf5'
+        output_hdf5_path = output_dir + '/data4_correct_gt' + '.hdf5'
         hdf5_file = h5py.File(output_hdf5_path, "a")
         episode_group = hdf5_file.create_group("labelled_data")
         for sensor_name in hdf5_data.keys():

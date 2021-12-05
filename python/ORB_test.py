@@ -20,12 +20,13 @@ plt.imshow(logo_temp),plt.show()
 #removing the blue edge of the logo template to detect logo itself
 logo_temp = crop.crop_img(logo_temp)
 # load the labelled gazebo data
-f = h5py.File('/home/gaetan/data/hdf5/logo_correct_size/data4_labelled.hdf5', 'r+')
+f = h5py.File('/home/gaetan/data/hdf5/correct_baselink_gt/data4_correct_gt.hdf5', 'r+')
 base_items = list(f.items())
 dset = f.get('labelled_data')
 imgs = np.array(dset.get('observation'))
 corn = np.array(dset.get('corners'))
 pos = np.array(dset.get('position'))
+pos_cam_world = np.array(dset.get('pos_cam_world'))
 observed_pos = 560
 src = imgs[observed_pos,:,:,:]*255
 src_gray = np.uint8(cv.cvtColor(src, cv.COLOR_BGR2GRAY))
@@ -57,7 +58,6 @@ img_size = src_gray.shape
 K = np.array([[fx,0,img_size[1]/2],
                 [0,fy,img_size[0]/2],
                 [0,0,1]])
-print('Range of matches used')
 
 for m in range(0,len(matches)):
     target_pt_idx = matches[m].trainIdx
@@ -94,46 +94,32 @@ pos_temp_world = dw.world_coord(np.array(pos_temp),logo_temp,rot)
 dist_coeffs = np.zeros((4,1))
 (suc,rot,trans) = cv.solvePnP(pos_temp_world, np.array(pos_target), K, dist_coeffs, flags=cv.SOLVEPNP_ITERATIVE)
 print(trans)
-print(suc)
 #computing the translation in world coordinates 
 cur_corn = corn[observed_pos,:,:]
+corn_size = cur_corn.shape
+print(cur_corn)
 corn_tup = []
-for i in range(0,4):
-    corn_tup.append((float(cur_corn[i,0]),float(cur_corn[i,1])))
+for i in range(0,corn_size[1]):
+    corn_tup.append((float(cur_corn[0,i]),float(cur_corn[1,i])))
     
-abs_y_max = 0.75/2
-abs_x_max = 1.05/2
+abs_y_max = 0.68/2
+abs_x_max = 0.98/2
 z = 0.001
 
-c_world = [(abs_x_max,abs_y_max,z),(abs_x_max,-abs_y_max,z),(-abs_x_max,abs_y_max,z),(-abs_x_max,-abs_y_max,z)]
-c_perm = list(itertools.permutations(c_world))
-#print(c_perm)
-trans_lst = []
-diff_lst = []
-ref = pos[observed_pos,:]
-for k in range(len(c_perm)):
-    (suc_corn,rot_corn,trans_corn) = cv.solvePnP(np.array(c_perm[k]), np.array(corn_tup), K, dist_coeffs, flags=cv.SOLVEPNP_ITERATIVE)
-    diff = np.sum(abs(ref) - abs(trans_corn))
-    trans_lst.append(trans_corn)
-    diff_lst.append(diff)
-min_val = min(diff_lst)
-idx_min = diff_lst.index(min_val)
-trans_res = trans_lst[idx_min]
-print(trans_res) 
-print(pos[observed_pos,:])
-pos = np.transpose(pos)
-print(type(pos))
-print(pos.shape)
+c_world = [(abs_x_max,-abs_y_max,z),(-abs_x_max,-abs_y_max,z),(-abs_x_max,abs_y_max,z),(abs_x_max,abs_y_max,z)]
 
-# print(cur_corn)
-# print(c_perm[idx_min])
-# img2 = imgs[observed_pos,:,:,:]
-# keypts = []
-# for j in range(0,4):
-#     img2[int(cur_corn[j,0]),int(cur_corn[j,1]),:] = [1,0,0]
-#     keypts.append(((cur_corn[j,1]),int(cur_corn[j,0])))
-# cv.drawContours(img2,[np.array(keypts)],0,(255,0,0),1)
-# plt.imshow(img2),plt.show()  
+
+(suc_corn,rot_corn,trans_corn) = cv.solvePnP(np.array(c_world), np.array(corn_tup), K, dist_coeffs, flags=cv.SOLVEPNP_ITERATIVE)
+print(trans_corn)
+print(pos_cam_world[observed_pos,:])
+
+img2 = imgs[observed_pos,:,:,:]
+keypts = []
+for j in range(0,corn_size[1]):
+    keypts.append((int(cur_corn[0,j]),int(cur_corn[1,j])))
+print(keypts)
+cv.drawContours(img2,[np.array(keypts)],0,(255,0,0),1)
+plt.imshow(img2),plt.show()  
 
 
         
