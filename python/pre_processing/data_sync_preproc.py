@@ -10,12 +10,13 @@ import cd_harris
 
 # load all the necessary data from the hdf5 file
 #f = h5py.File('/home/gaetan/data/hdf5/test_sim_flight/data3.hdf5', 'r')
-current_dir = '/home/gaetan/data/hdf5/logo_correct_size/'
+current_dir = '/home/gaetan/data/hdf5/correct_baselink_gt/'
+print(current_dir)
 f = h5py.File(current_dir+'data4.hdf5', 'r')
 base_items = list(f.items())
-print('Groups:',base_items)
+#print('Groups:',base_items)
 dset = f.get('0')
-print('Items in group 0',list(dset.items()))
+#print('Items in group 0',list(dset.items()))
 imgs = np.array(dset.get('observation'))
 pos = np.array(dset.get('position'))
 quat = np.array(dset.get('orientation'))

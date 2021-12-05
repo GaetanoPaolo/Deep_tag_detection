@@ -1,0 +1,36 @@
+# box_target = findBB_rot(pos_target)
+# box_temp = findBB_straight(pos_temp)
+# img_cont1 = np.copy(imgs[observed_pos,:,:,:])
+# print('Original box target')
+# print(box_target)
+#creating bounding box around template image keypoints
+# print('Original box temp')
+# print(box_temp)
+# img_cont2= np.copy(logo_temp)
+
+
+# BB_target = findBB(np.array(pos_target))
+# BB_temp = findBB(np.array(pos_temp))
+
+# BB_target = rearrange_target_BB(box_temp,box_target,pos_target,pos_temp)
+# print(BB_target)
+# cv.drawContours(img_cont1,[box_target],0,(255,0,0),1)
+# for i in pos_target:
+#     cv.circle(img_cont1,i, 2, (0,0,255), -1)
+# plt.imshow(img_cont1),plt.show()
+# cv.drawContours(img_cont2,[box_temp],0,(0,0,255),50)
+# for i in pos_temp:
+#     cv.circle(img_cont2,i, 50, (0,0,255), -1)
+# plt.imshow(img_cont2),plt.show()
+# cv.drawContours(img_cont, [BB_target], 0, (0,255,0), 3)
+# plt.imshow(img_cont),plt.show()
+# BB_temp_world = world_coord(box_temp,logo_temp)
+
+#plotting the current image with BB
+# img = imgs[observed_pos,:,:,:]
+# for j in range(0,4):
+#     img[int(BB_target[j,0]),int(BB_target[j,1]),:] = [1,0,0]
+# print('Displayed dots')
+# print(pos_target)
+# print(BB_target)
+#plt.imshow(img),plt.show()

@@ -33,8 +33,8 @@ class Datasaver:
             rospy.Subscriber('/down/image_raw', 
                                 Image,
                                 callback=self._camera_callback)
-            rospy.Subscriber('/ground_truth_to_tf/pose',
-                                PoseStamped,
+            rospy.Subscriber('/ground_truth/state',
+                                Odometry,
                                 callback=self._pose_callback)
             rospy.Subscriber('/tf', TFMessage,callback=self._tf_callback)
             rospy.Subscriber('/tf_static', TFMessage,callback=self._tfstatic_callback)
@@ -101,8 +101,9 @@ class Datasaver:
         stamp = h.stamp
         self._hdf5_data["pose_time"].append([stamp.nsecs, stamp.secs*1e-9])
         p = getattr(msg, 'pose')
-        position = p.position
-        quaternion = p.orientation
+        pose = p.pose
+        position = pose.position
+        quaternion = pose.orientation
         pos_vect = [position.x, position.y, position.z]
         orientation_vect = [quaternion.x, quaternion.y, quaternion.z, quaternion.w]
         self._hdf5_data["position"].append(pos_vect)
@@ -134,7 +135,7 @@ class Datasaver:
 print(__name__)
 if __name__ == '__main__':
     print('protocol started')
-    output_directory = '/home/gaetan/data/hdf5/logo_correct_size'
+    output_directory = '/home/gaetan/data/hdf5/correct_baselink_gt'
     data_saver = Datasaver(output_dir=output_directory)
     print('Datasaver_created')
     data_saver.run()
