@@ -8,7 +8,11 @@ def corner_proj(imgs,quat,pos,quat_down_link,pos_down_link,quat_down_optical_fra
     T_baselink_downlink_inv = np.linalg.inv(T_baselink_downlink)
     T_downlink_downoptframe_inv = np.linalg.inv(T_downlink_downoptframe)
     T_baselink_downoptframe = np.matmul(T_baselink_downlink,T_downlink_downoptframe)
-    p_downoptframe_baselink = T_baselink_downoptframe[:,3]
+    c0_world = np.array([[0],
+                    [0],
+                    [0],
+                    [1]])
+    #p_downoptframe_baselink = T_baselink_downoptframe[:,3]
     # define the world corner logo positions 
     #for the current dataset
     abs_y_max = 0.68/2
@@ -25,15 +29,19 @@ def corner_proj(imgs,quat,pos,quat_down_link,pos_down_link,quat_down_optical_fra
     fx = -img_size[2]/2*np.tan(horizontal_field_of_view/2)**(-1)
     fy = -img_size[1]/2*np.tan(vertical_field_of_view/2)**(-1)
     T_world_baselink = transform_mat.transf_mat(quat,pos)
-    p_downoptframe_world  = np.matmul(T_world_baselink,p_downoptframe_baselink)
+    #T_world_downoptframe = np.matmul(T_world_baselink,T_baselink_downoptframe)
+    #p_downoptframe_world = T_world_downoptframe[:,3]
     T_world_baselink_inv = np.linalg.inv(T_world_baselink)
     c_baselink = np.matmul(T_world_baselink_inv,c_world)
+    c0_baselink = np.matmul(T_world_baselink_inv,c0_world)
     c_downlink = np.matmul(T_baselink_downlink_inv,c_baselink)
+    c0_downlink = np.matmul(T_baselink_downlink_inv, c0_baselink)
     c_cam = np.matmul(T_downlink_downoptframe_inv,c_downlink)
+    c0_cam = np.matmul(T_downlink_downoptframe_inv, c0_downlink)
     K = np.array([[-fx,0,img_size[2]/2],
                  [0,-fy,img_size[1]/2],
                  [0,0,1]])
     for j in range(0,c_size[1]):
         c_cam[0:3,j]=c_cam[0:3,j]/c_cam[2,j]
     c_proj = np.matmul(K,c_cam[0:3,:])
-    return c_proj,p_downoptframe_world
+    return c_proj,c0_cam

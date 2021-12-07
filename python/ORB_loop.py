@@ -13,12 +13,13 @@ rot = 0
 #removing the blue edge of the logo template to detect logo itself
 logo_temp = crop.crop_img(logo_temp)
 # load the labelled gazebo data
-f = h5py.File('/home/gaetan/data/hdf5/logo_correct_size/data4_labelled.hdf5', 'r+')
+f = h5py.File('/home/gaetan/data/hdf5/correct_baselink_gt/data4_correct_gt.hdf5', 'r+')
 base_items = list(f.items())
 dset = f.get('labelled_data')
 imgs = np.array(dset.get('observation'))
 corn = np.array(dset.get('corners'))
-pos = np.array(dset.get('position'))
+pos = np.array(dset.get('pos_origin_cam'))
+#pos = np.array(dset.get('position'))
 #initiating necessary parameters
 fx = 100
 fy = 100
@@ -35,6 +36,7 @@ bf = cv.BFMatcher_create(cv.NORM_HAMMING,crossCheck=True)
 kp_temp, des_temp = orb.detectAndCompute(logo_temp,None)
 train_dim = imgs.shape
 trans_est = np.zeros((3,arr_size[0]))
+trans_corn = np.zeros((3,arr_size[0]))
 start = 0
 count = 0
 for k in range(100,train_dim[0]):
@@ -75,11 +77,29 @@ for k in range(100,train_dim[0]):
             trans_est[:,k] = est_trans[:,0]
         else:
             trans_est[:,k] = trans_est[:,k-1]
+        cur_corn = corn[k,:,:]
+        corn_size = cur_corn.shape
+        corn_tup = []
+        for i in range(0,corn_size[1]):
+            corn_tup.append((float(cur_corn[0,i]),float(cur_corn[1,i])))
+            
+        abs_y_max = 0.68/2
+        abs_x_max = 0.98/2
+        z = 0.001
+        c_world = [(abs_x_max,-abs_y_max,z),(-abs_x_max,-abs_y_max,z),(-abs_x_max,abs_y_max,z),(abs_x_max,abs_y_max,z)]
+        (suc_corn,rot_corn,corn_trans) = cv.solvePnP(np.array(c_world), np.array(corn_tup), K, dist_coeffs, flags=cv.SOLVEPNP_ITERATIVE)
+        trans_corn[:,k] = corn_trans[:,0]
 
-pos = np.transpose(pos)
-diff = np.subtract(pos,trans_est)
+pos = np.transpose(pos)[0,0:3,:]
+#pos = np.transpose(pos)
+print(start)
+print(train_dim[0])
+diff = np.subtract(trans_est,pos)
+diff_corn = np.subtract(trans_corn,pos)
 mse = np.mean(np.square(diff[:,range(start,train_dim[0])]), axis = 1)
-hor_sum = np.sum(diff[:,range(start,train_dim[0])], axis = 1)
+mse_corn = np.mean(np.square(diff_corn[:,range(start,train_dim[0])]), axis = 1)
+#hor_sum = np.sum(diff[:,range(start,train_dim[0])], axis = 1)
 print(mse)
+print(mse_corn)
 
 

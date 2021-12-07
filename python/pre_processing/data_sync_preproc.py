@@ -36,7 +36,7 @@ if SIM:
     quat_down_link = np.array(dset.get("quat_down_link"))
     pos_down_optical_frame = np.array(dset.get("pos_down_optical_frame"))
     quat_down_optical_frame = np.array(dset.get("quat_down_optical_frame"))
-    hdf5_data = {"observation": [], "position": [],"orientation": [],"corners":[],"pos_cam_world":[],"pos_base_footprint": [],"quat_base_footprint": [], 
+    hdf5_data = {"observation": [], "position": [],"orientation": [],"corners":[],"pos_origin_cam":[],"pos_base_footprint": [],"quat_base_footprint": [], 
             'pos_base_stabilized':[],'quat_base_stabilized':[],'pos_base_link':[],'quat_base_link':[],
             'pos_down_link':[],'quat_down_link':[],'pos_down_optical_frame':[],'quat_down_optical_frame':[],
             'image_time': [], 'pose_time': [],"relative_position": []}
@@ -95,7 +95,7 @@ for i in range(0,it_len1):
                         hdf5_data['quat_base_link'].append(quat_base_link[j,:])
                         corn, p_cam = proj.corner_proj(imgs,quat[j,:], pos[j,:],quat_down_link,pos_down_link,quat_down_optical_frame,pos_down_optical_frame)
                         hdf5_data["corners"].append(np.array(corn))
-                        hdf5_data["pos_cam_world"].append(np.array(p_cam))
+                        hdf5_data["pos_origin_cam"].append(np.array(p_cam))
                     if first == 0:
                         pos_ref = pos[j,:]
                         first += 1
@@ -121,7 +121,7 @@ for i in range(0,it_len1):
                         hdf5_data['quat_base_link'].append(quat_base_link[i,:])
                         corn, p_cam = proj.corner_proj(imgs,quat[i,:], pos[i,:],quat_down_link,pos_down_link,quat_down_optical_frame,pos_down_optical_frame)
                         hdf5_data["corners"].append(np.array(corn))
-                        hdf5_data["pos_cam_world"].append(np.array(p_cam))
+                        hdf5_data["pos_origin_cam"].append(np.array(p_cam))
                     if first == 0:
                         pos_ref = pos[i,:]
                         first += 1
