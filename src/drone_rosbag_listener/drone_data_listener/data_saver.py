@@ -13,12 +13,12 @@ import rospy
 from geometry_msgs.msg import Twist, PointStamped, Point, PoseStamped
 from tf2_msgs.msg import TFMessage
 from std_msgs.msg import String, Float32MultiArray, Empty
-from sensor_msgs.msg import Image
+from sensor_msgs.msg import Image, CameraInfo
 from nav_msgs.msg import Odometry
 from rosgraph_msgs.msg import Clock
 import custom_utils
 
-SIM = True
+SIM = False
 
 class Datasaver:
     def __init__(self, output_dir):
@@ -40,12 +40,16 @@ class Datasaver:
             rospy.Subscriber('/tf_static', TFMessage,callback=self._tfstatic_callback)
             self.size = {'height': 200, 'width': 200, 'depth': 3}
         else:
-            rospy.Subscriber('/camera/fisheye1/image_raw',
+            rospy.Subscriber('/d400/color/image_raw',
                                 Image,
                                 callback=self._camera_callback)
-            rospy.Subscriber('/mavros/local_position/odom',
-                                Odometry,
-                                callback=self._odom_callback)
+            rospy.Subscriber('/tf',
+                                TFMessage,
+                                callback=self._tf_callback_d400)
+            rospy.Subscriber('/d400/color/camera_info',
+                                CameraInfo,
+                                callback=self._camera_info_callback
+                                )
             self.size = {'height': 480, 'width': 640, 'depth': 3}
         self._episode_id = -1
         self._reset()
@@ -69,7 +73,7 @@ class Datasaver:
             'pos_down_link':[],'quat_down_link':[],'pos_down_optical_frame':[],'quat_down_optical_frame':[],
             'image_time': [], 'pose_time': []}
         else:
-            self._hdf5_data = {"observation": [], "position": [],"orientation": [], 'image_time': [], 'pose_time': []}
+            self._hdf5_data = {"observation": [], "pos_camera_pose_frame": [],"quat_camera_pose_frame": [], "pos_/d400_link":[],"quat_/d400_link":[],'image_time': [], 'pose_time': [], 'K':[], 'P':[]}
             
     
     def _camera_callback(self, msg):
@@ -78,6 +82,9 @@ class Datasaver:
         self._hdf5_data["image_time"].append([stamp.nsecs, stamp.secs*1e-9])
         image = custom_utils.process_image(msg, self.size)
         self._hdf5_data["observation"].append(deepcopy(image))
+    def _camera_info_callback(self,msg):
+        self._hdf5_data["K"].append(msg.K)
+        self._hdf5_data["P"].append(msg.P)
     def _odom_callback(self, msg):
         h = getattr(msg, 'header')
         stamp = h.stamp
@@ -108,6 +115,17 @@ class Datasaver:
         orientation_vect = [quaternion.x, quaternion.y, quaternion.z, quaternion.w]
         self._hdf5_data["position"].append(pos_vect)
         self._hdf5_data["orientation"].append(orientation_vect)
+    def _tf_callback_d400(self,msg):
+        transfs = getattr(msg, 'transforms')
+        cur_transf = transfs[0]
+        h = cur_transf.header
+        stamp = h.stamp
+        self._hdf5_data["pose_time"].append([stamp.nsecs, stamp.secs*1e-9])
+        cur_pos = cur_transf.transform.translation
+        cur_quaternion = cur_transf.transform.rotation
+        cur_child_frame = cur_transf.child_frame_id
+        self._hdf5_data["pos_"+cur_child_frame].append([cur_pos.x, cur_pos.y, cur_pos.z])
+        self._hdf5_data["quat_"+cur_child_frame].append([cur_quaternion.x, cur_quaternion.y, cur_quaternion.z, cur_quaternion.w])
     def _tf_callback(self,msg):
         transfs = getattr(msg, 'transforms')
         for k in range(0,3):
@@ -135,7 +153,7 @@ class Datasaver:
 print(__name__)
 if __name__ == '__main__':
     print('protocol started')
-    output_directory = '/home/gaetan/data/hdf5/correct_baselink_gt'
+    output_directory = '/home/gaetan/data/hdf5/d400'
     data_saver = Datasaver(output_dir=output_directory)
     print('Datasaver_created')
     data_saver.run()

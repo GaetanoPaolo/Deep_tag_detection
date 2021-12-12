@@ -23,7 +23,7 @@ imgs = np.array(dset.get('observation'))
 corn = np.array(dset.get('corners'))
 pos = np.array(dset.get('position'))
 pos_origin_cam = np.array(dset.get('pos_origin_cam'))
-observed_pos = 560
+observed_pos = 849
 src = imgs[observed_pos,:,:,:]*255
 src_gray = np.uint8(cv.cvtColor(src, cv.COLOR_BGR2GRAY))
 
@@ -65,7 +65,7 @@ for m in range(0,len(matches)):
 pos_temp_hom = np.float32(pos_temp).reshape(-1,1,2)
 pos_target_hom = np.float32(pos_target).reshape(-1,1,2)
 #Homography takes point inputs as numpy vectors with lists of points as elements
-M, mask = cv.findHomography( pos_temp_hom, pos_target_hom,cv.RANSAC,1.0)
+M, mask = cv.findHomography( pos_temp_hom, pos_target_hom,cv.RANSAC,5.0)
 matchesMask = mask.ravel().tolist()
 inlier_matches = []
 rem = 0
@@ -85,6 +85,9 @@ plt.imshow(ORB_inlier_matches),plt.show()
 pos_temp_world = dw.world_coord(np.array(pos_temp),logo_temp,rot)
 dist_coeffs = np.zeros((4,1))
 (suc,rot,trans) = cv.solvePnP(pos_temp_world, np.array(pos_target), K, dist_coeffs, flags=cv.SOLVEPNP_ITERATIVE)
+print(K)
+print(pos_temp_world)
+print(np.array(pos_target))
 print(trans)
 #computing the translation in world coordinates 
 cur_corn = corn[observed_pos,:,:]

@@ -21,8 +21,8 @@ corn = np.array(dset.get('corners'))
 pos = np.array(dset.get('pos_origin_cam'))
 #pos = np.array(dset.get('position'))
 #initiating necessary parameters
-fx = 100
-fy = 100
+fx = 119
+fy = 119
 arr_size = pos.shape
 img_size = imgs[0,:,:,:].shape
 K = np.array([[fx,0,img_size[1]/2],
@@ -59,16 +59,16 @@ for k in range(100,train_dim[0]):
             pos_target.append(target_coord)
         pos_temp_hom = np.float32(pos_temp).reshape(-1,1,2)
         pos_target_hom = np.float32(pos_target).reshape(-1,1,2)
-        M, mask = cv.findHomography( pos_temp_hom, pos_target_hom,cv.RANSAC,0.1)
+        M, mask = cv.findHomography( pos_temp_hom, pos_target_hom,cv.RANSAC,5.0)
         matchesMask = mask.ravel().tolist()
         inlier_matches = []
         rem = 0
-        for k in range(0,len(matches)):
-            if matchesMask[k] == 1:
-                inlier_matches.append(matches[k])
+        for n in range(0,len(matches)):
+            if matchesMask[n] == 1:
+                inlier_matches.append(matches[n])
             else:
-                pos_temp.pop(k-rem)
-                pos_target.pop(k-rem)
+                pos_temp.pop(n-rem)
+                pos_target.pop(n-rem)
                 rem += 1
         if len(inlier_matches) > 3:
             pos_temp_world = dw.world_coord(np.array(pos_temp),logo_temp,rot)
@@ -77,6 +77,7 @@ for k in range(100,train_dim[0]):
             trans_est[:,k] = est_trans[:,0]
         else:
             trans_est[:,k] = trans_est[:,k-1]
+            print(k)
         cur_corn = corn[k,:,:]
         corn_size = cur_corn.shape
         corn_tup = []
@@ -89,11 +90,12 @@ for k in range(100,train_dim[0]):
         c_world = [(abs_x_max,-abs_y_max,z),(-abs_x_max,-abs_y_max,z),(-abs_x_max,abs_y_max,z),(abs_x_max,abs_y_max,z)]
         (suc_corn,rot_corn,corn_trans) = cv.solvePnP(np.array(c_world), np.array(corn_tup), K, dist_coeffs, flags=cv.SOLVEPNP_ITERATIVE)
         trans_corn[:,k] = corn_trans[:,0]
+        #print(trans_corn[:,k])
+    # print(k),
+    # print(trans_est[:,k])
 
 pos = np.transpose(pos)[0,0:3,:]
 #pos = np.transpose(pos)
-print(start)
-print(train_dim[0])
 diff = np.subtract(trans_est,pos)
 diff_corn = np.subtract(trans_corn,pos)
 mse = np.mean(np.square(diff[:,range(start,train_dim[0])]), axis = 1)

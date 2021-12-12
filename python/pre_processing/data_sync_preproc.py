@@ -9,23 +9,25 @@ import det_logo_image
 
 # load all the necessary data from the hdf5 file
 #f = h5py.File('/home/gaetan/data/hdf5/test_sim_flight/data3.hdf5', 'r')
-current_dir = '/home/gaetan/data/hdf5/correct_baselink_gt/'
+current_dir = '/home/gaetan/data/hdf5/d400/'
 print(current_dir)
 f = h5py.File(current_dir+'data4.hdf5', 'r')
 base_items = list(f.items())
 #print('Groups:',base_items)
 dset = f.get('0')
+SIM = False
 #print('Items in group 0',list(dset.items()))
 imgs = np.array(dset.get('observation'))
-pos = np.array(dset.get('position'))
-quat = np.array(dset.get('orientation'))
 image_time = np.array(dset.get('image_time'))
 pose_time = np.array(dset.get('pose_time'))
-#rel_pos = pos
-pos_size = pos.shape
-SIM = True
+
+
+
+
 # define new dict for hdf5 storage
 if SIM:
+    pos = np.array(dset.get('position'))
+    quat = np.array(dset.get('orientation'))
     pos_base_footprint = np.array(dset.get("pos_base_footprint"))
     quat_base_footprint = np.array(dset.get("quat_base_footprint"))
     pos_base_stabilized = np.array(dset.get("pos_base_stabilized"))
@@ -40,12 +42,21 @@ if SIM:
             'pos_base_stabilized':[],'quat_base_stabilized':[],'pos_base_link':[],'quat_base_link':[],
             'pos_down_link':[],'quat_down_link':[],'pos_down_optical_frame':[],'quat_down_optical_frame':[],
             'image_time': [], 'pose_time': [],"relative_position": []}
+    hdf5_data['pos_down_link'].append(pos_down_link[0,:])
+    hdf5_data['quat_down_link'].append(quat_down_link[0,:])
+    hdf5_data['pos_down_optical_frame'].append(pos_down_optical_frame[0,:])
+    hdf5_data['quat_down_optical_frame'].append(quat_down_optical_frame[0,:])
 else:
-    hdf5_data = {"observation": [], "position": [], "orientation": [],"relative_position": [],'image_time': [], 'pose_time': []}
-hdf5_data['pos_down_link'].append(pos_down_link[0,:])
-hdf5_data['quat_down_link'].append(quat_down_link[0,:])
-hdf5_data['pos_down_optical_frame'].append(pos_down_optical_frame[0,:])
-hdf5_data['quat_down_optical_frame'].append(quat_down_optical_frame[0,:])
+    pos = np.array(dset.get("pos_camera_pose_frame"))
+    quat = np.array(dset.get("quat_camera_pose_frame"))
+    K = np.array(dset.get("K"))
+    P = np.array(dset.get("P"))
+    hdf5_data = {"observation": [], "pos_camera_pose_frame": [],"quat_camera_pose_frame": [], "pos_/d400_link":[],"quat_/d400_link":[],'image_time': [], 'pose_time': [], 'K':[], 'P':[]}
+    hdf5_data['K'].append(K)
+    hdf5_data['P'].append(P)
+#rel_pos = pos
+pos_size = pos.shape
+
 #check which timestamps are equal and synchronize images and poses
 if image_time.shape[0] < pose_time.shape[0]:
     it_len1 = image_time.shape[0]
