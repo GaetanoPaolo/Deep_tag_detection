@@ -16,10 +16,10 @@ base_items = list(f.items())
 #print('Groups:',base_items)
 dset = f.get('0')
 SIM = False
-#print('Items in group 0',list(dset.items()))
+print('Items in group 0',list(dset.items()))
 imgs = np.array(dset.get('observation'))
 image_time = np.array(dset.get('image_time'))
-pose_time = np.array(dset.get('pose_time'))
+pose_time = np.array(dset.get('odom_time'))
 
 
 
@@ -41,37 +41,57 @@ if SIM:
     hdf5_data = {"observation": [], "position": [],"orientation": [],"corners":[],"pos_origin_cam":[],"pos_base_footprint": [],"quat_base_footprint": [], 
             'pos_base_stabilized':[],'quat_base_stabilized':[],'pos_base_link':[],'quat_base_link':[],
             'pos_down_link':[],'quat_down_link':[],'pos_down_optical_frame':[],'quat_down_optical_frame':[],
-            'image_time': [], 'pose_time': [],"relative_position": []}
+            'image_time': [], 'pose_time': []}
     hdf5_data['pos_down_link'].append(pos_down_link[0,:])
     hdf5_data['quat_down_link'].append(quat_down_link[0,:])
     hdf5_data['pos_down_optical_frame'].append(pos_down_optical_frame[0,:])
     hdf5_data['quat_down_optical_frame'].append(quat_down_optical_frame[0,:])
 else:
-    pos = np.array(dset.get("pos_camera_pose_frame"))
-    quat = np.array(dset.get("quat_camera_pose_frame"))
+    pos = np.array(dset.get("odom_position"))
+    quat = np.array(dset.get("odom_orientation"))
+    #odom_pos = np.array(dset.get("odom_position"))
+    #odom_quat = np.array(dset.get("odom_orientation"))
+    #odom_time = np.array(dset.get("odom_time"))
     K = np.array(dset.get("K"))
     P = np.array(dset.get("P"))
-    hdf5_data = {"observation": [], "pos_camera_pose_frame": [],"quat_camera_pose_frame": [], "pos_/d400_link":[],"quat_/d400_link":[],'image_time': [], 'pose_time': [], 'K':[], 'P':[]}
-    hdf5_data['K'].append(K)
-    hdf5_data['P'].append(P)
+    hdf5_data = {"observation": [], "position": [],"orientation": [], 'relative_position':[],'image_time': [], 'pose_time': [], 'K':[], 'P':[]}
+    hdf5_data['K'].append(K[0,:])
+    hdf5_data['P'].append(P[0,:])
 #rel_pos = pos
-pos_size = pos.shape
-
+pos_size = pos.shape[0]
+if pose_time.shape[0] > pos_size:
+    pose_time_amount = pos_size
+else:
+    pose_time_amount = pose_time.shape[0]
 #check which timestamps are equal and synchronize images and poses
-if image_time.shape[0] < pose_time.shape[0]:
+if image_time.shape[0] < pose_time_amount:
     it_len1 = image_time.shape[0]
     long_time = pose_time
     short_time = image_time
-    it_len2 = pose_time.shape[0]
+    it_len2 = pose_time_amount
     img_short = 1
 else:
-    it_len1 = pose_time.shape[0]
+    it_len1 = pose_time_amount
     long_time = image_time
     short_time = pose_time
     img_short = 0
-#it_len = image_time.shape[0]
+    it_len2 = image_time.shape[0]
 first = 0
+
+def dump(output_dir,hdf5_data,ep):
+        print('stored data in',output_dir)
+        output_hdf5_path = output_dir + '/data4_correct_gt' + '.hdf5'
+        hdf5_file = h5py.File(output_hdf5_path, "a")
+        episode_group = hdf5_file.create_group(str(ep))
+        for sensor_name in hdf5_data.keys():
+            episode_group.create_dataset(
+                sensor_name, data=np.stack(hdf5_data[sensor_name])
+            )
+        hdf5_file.close()
+count = 0
+ep = 1
 for i in range(0,it_len1):
+    count += 1
     cur_ref_time_ns = np.round(short_time[i,0]/(10**8),1)
     cur_ref_time_ms = np.round(short_time[i,1]/(10**(-7)),2)
     cur_ref_time = [cur_ref_time_ns,cur_ref_time_ms]
@@ -81,8 +101,10 @@ for i in range(0,it_len1):
         odom_time = [odom_time_ns, odom_time_ms]
         if cur_ref_time == odom_time:
             hdf5_data["pose_time"].append(long_time[j,:])
+            #hdf5_data["odom_time"].append(odom_time[j,:])
             hdf5_data["image_time"].append(short_time[i,:])
             if img_short == 1:
+                print ('i'),
                 print(i)
                 if det_logo_image.logo_image(SIM,imgs[i,:,:,:]):
                     hdf5_data["observation"].append(imgs[i,:,:,:])
@@ -107,12 +129,16 @@ for i in range(0,it_len1):
                         corn, p_cam = proj.corner_proj(imgs,quat[j,:], pos[j,:],quat_down_link,pos_down_link,quat_down_optical_frame,pos_down_optical_frame)
                         hdf5_data["corners"].append(np.array(corn))
                         hdf5_data["pos_origin_cam"].append(np.array(p_cam))
-                    if first == 0:
-                        pos_ref = pos[j,:]
-                        first += 1
-                    rel_pos = pos[j,:] - pos_ref
-                    hdf5_data["relative_position"].append(rel_pos)
+                    else:
+                        #hdf5_data["odom_position"].append(odom_pos[j,:])
+                        #hdf5_data["odom_orientation"].append(odom_quat[j,:])
+                        if first == 0:
+                            pos_ref = pos[j,:]
+                            first += 1
+                        rel_pos = pos[j,:] - pos_ref
+                        hdf5_data["relative_position"].append(rel_pos)
             else: 
+                print('j'),
                 print(j)
                 if det_logo_image.logo_image(SIM,imgs[j,:,:,:]):
                     hdf5_data["observation"].append(imgs[j,:,:,:])
@@ -133,23 +159,23 @@ for i in range(0,it_len1):
                         corn, p_cam = proj.corner_proj(imgs,quat[i,:], pos[i,:],quat_down_link,pos_down_link,quat_down_optical_frame,pos_down_optical_frame)
                         hdf5_data["corners"].append(np.array(corn))
                         hdf5_data["pos_origin_cam"].append(np.array(p_cam))
-                    if first == 0:
-                        pos_ref = pos[i,:]
-                        first += 1
-                    rel_pos = pos[i,:] - pos_ref
-                    hdf5_data["relative_position"].append(rel_pos)
+                    else:
+                        #hdf5_data["odom_position"].append(odom_pos[i,:])
+                        #hdf5_data["odom_orientation"].append(odom_quat[i,:])
+                        if first == 0:
+                            pos_ref = pos[i,:]
+                            first += 1
+                        rel_pos = pos[i,:] - pos_ref
+                        hdf5_data["relative_position"].append(rel_pos)
+            break
+    if count >= 300:
+        dump(current_dir,hdf5_data,ep)
+        count = 0
+        ep += 1
+        hdf5_data = {"observation": [], "position": [],"orientation": [], 'relative_position':[],'image_time': [], 'pose_time': []}
 
 print('Items in group dict',list(hdf5_data.keys()))
 #dump the new dict in new hdf5 file
-def dump(output_dir,hdf5_data):
-        print('stored data in',output_dir)
-        output_hdf5_path = output_dir + '/data4_correct_gt' + '.hdf5'
-        hdf5_file = h5py.File(output_hdf5_path, "a")
-        episode_group = hdf5_file.create_group("labelled_data")
-        for sensor_name in hdf5_data.keys():
-            episode_group.create_dataset(
-                sensor_name, data=np.stack(hdf5_data[sensor_name])
-            )
-        hdf5_file.close() 
+ 
 
-dump(current_dir,hdf5_data)
+

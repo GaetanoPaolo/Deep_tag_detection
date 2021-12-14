@@ -7,29 +7,37 @@ import time
 import crop
 import itertools
 import draw_transf as dw
+import transform_mat
 #load the logo template
 logo_temp = cv.imread('/home/gaetan/code/simulation_ws/src/my_simulations/models/psi_logo/materials/textures/poster-psi-drone-logo-2percent.png',0)
 logo_temp_color = cv.imread('/home/gaetan/code/simulation_ws/src/my_simulations/models/psi_logo/materials/textures/poster-psi-drone-logo.png')
 #covering the inner logo to avoid keypoint confusion
 rot = 0
 plt.imshow(logo_temp),plt.show()
-#removing the blue edge of the logo template to detect logo itself
 logo_temp = crop.crop_img(logo_temp)
-# load the labelled gazebo data
-f = h5py.File('/home/gaetan/data/hdf5/landing_d435_000/data4_preproc.hdf5', 'r+')
+# load the camera parameters stored in episode 1
+f = h5py.File('/home/gaetan/data/hdf5/d400/data4_correct_gt.hdf5', 'r+')
 base_items = list(f.items())
-dset = f.get('preproc_data')
-group_items = list(dset.items())
+dset1 = f.get('1')
+K = np.array(dset1.get('K')).reshape((3,3))
+print(K)
+# ILoad other parameters and images from chosen episode
+dset2 = f.get('4')
+group_items = list(dset2.items())
 print(group_items)
-imgs = np.array(dset.get('observation'))
-pos = np.array(dset.get('position'))
-rel_pos = np.array(dset.get('relative_position'))
-img_stamp = np.array(dset.get('image_time'))
-pose_stamp = np.array(dset.get('pose_time'))
-observed_pos = 849
+imgs = np.array(dset2.get('observation'))
+pos = np.array(dset2.get('position'))
+quat = np.array(dset2.get('orientation'))
+rel_pos = np.array(dset2.get('relative_position'))
+img_stamp = np.array(dset2.get('image_time'))
+pose_stamp = np.array(dset2.get('pose_time'))
+observed_pos = 199
 src = imgs[observed_pos,:,:,:]*255
 src_gray = np.uint8(cv.cvtColor(src, cv.COLOR_BGR2GRAY))
-
+plt.imshow(imgs[observed_pos,:,:,:]),plt.show()
+T_gnd_odom = transform_mat.transf_mat(quat[observed_pos,:],pos[observed_pos,:])
+T_odom_gnd = np.linalg.inv(T_gnd_odom)
+pos_odom  = T_odom_gnd[0:3,3]
 #code source till line 31: https://datahacker.rs/feature-matching-methods-comparison-in-opencv/
 #creating keypoint matchers and finders
 orb = cv.ORB_create()
@@ -49,14 +57,6 @@ plt.imshow(ORB_matches),plt.show()
 
 pos_temp = []
 pos_target = []
-#2) approximating camera parameters, will be approximated again during solvepnp
-# if result incorrect => calibrate camera_
-fx = 119
-fy = 119
-img_size = src_gray.shape
-K = np.array([[fx,0,img_size[1]/2],
-                [0,fy,img_size[0]/2],
-                [0,0,1]])
 
 for m in range(0,len(matches)):
     target_pt_idx = matches[m].trainIdx
@@ -68,7 +68,7 @@ for m in range(0,len(matches)):
 pos_temp_hom = np.float32(pos_temp).reshape(-1,1,2)
 pos_target_hom = np.float32(pos_target).reshape(-1,1,2)
 #Homography takes point inputs as numpy vectors with lists of points as elements
-M, mask = cv.findHomography( pos_temp_hom, pos_target_hom,cv.RANSAC,5.0)
+M, mask = cv.findHomography( pos_temp_hom, pos_target_hom,cv.RANSAC,2.0)
 matchesMask = mask.ravel().tolist()
 inlier_matches = []
 rem = 0
@@ -91,10 +91,11 @@ dist_coeffs = np.zeros((4,1))
 #print(K)
 #print(pos_temp_world)
 #print(np.array(pos_target))
-#print(trans)
-
-#print(rel_pos[observed_pos,:])
+print('Estimated pos relative to cam')
+print(trans)
+print('cam pos relative to origin?')
+print(pos[observed_pos,:])
+print('origin pos relative to cam?')
+print(pos_odom)
 print(img_stamp[observed_pos,:]),
-print(pose_stamp[observed_pos,:]),
-print(pos),
-print(rel_pos)
+print(pose_stamp[observed_pos,:])

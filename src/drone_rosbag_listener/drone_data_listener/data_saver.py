@@ -50,6 +50,9 @@ class Datasaver:
                                 CameraInfo,
                                 callback=self._camera_info_callback
                                 )
+            rospy.Subscriber('/mavros/local_position/odom',
+                                Odometry,
+                                callback=self._odom_callback)
             self.size = {'height': 480, 'width': 640, 'depth': 3}
         self._episode_id = -1
         self._reset()
@@ -73,7 +76,7 @@ class Datasaver:
             'pos_down_link':[],'quat_down_link':[],'pos_down_optical_frame':[],'quat_down_optical_frame':[],
             'image_time': [], 'pose_time': []}
         else:
-            self._hdf5_data = {"observation": [], "pos_camera_pose_frame": [],"quat_camera_pose_frame": [], "pos_/d400_link":[],"quat_/d400_link":[],'image_time': [], 'pose_time': [], 'K':[], 'P':[]}
+            self._hdf5_data = {"observation": [], "pos_camera_pose_frame": [],"quat_camera_pose_frame": [], "pos_/d400_link":[],"quat_/d400_link":[],'odom_position':[],'odom_orientation':[],'image_time': [], 'pose_time': [], 'odom_time':[],'K':[], 'P':[]}
             
     
     def _camera_callback(self, msg):
@@ -88,7 +91,7 @@ class Datasaver:
     def _odom_callback(self, msg):
         h = getattr(msg, 'header')
         stamp = h.stamp
-        self._hdf5_data["pose_time"].append([stamp.nsecs, stamp.secs*1e-9])
+        self._hdf5_data["odom_time"].append([stamp.nsecs, stamp.secs*1e-9])
         p = getattr(msg, 'pose')
         pose = p.pose
         position = pose.position
@@ -101,8 +104,8 @@ class Datasaver:
         twist_cov = t.covariance
         pos_vect = [position.x, position.y, position.z]
         orientation_vect = [quaternion.x, quaternion.y, quaternion.z, quaternion.w]
-        self._hdf5_data["position"].append(pos_vect)
-        self._hdf5_data["orientation"].append(orientation_vect)
+        self._hdf5_data["odom_position"].append(pos_vect)
+        self._hdf5_data["odom_orientation"].append(orientation_vect)
     def _pose_callback(self,msg):
         h = getattr(msg, 'header')
         stamp = h.stamp
