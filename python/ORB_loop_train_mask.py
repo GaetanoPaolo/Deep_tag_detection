@@ -44,8 +44,9 @@ kp_temp, des_temp = orb.detectAndCompute(logo_temp,None)
 train_dim = imgs.shape
 trans_est = np.zeros((3,arr_size[0]))
 trans_corn = np.zeros((3,arr_size[0]))
+valid_est = np.zeros((1,arr_size[0]))
 #arr_world_cam = np.zeros((3,arr_size[0]))
-arr_world_cam_est = np.zeros((3,arr_size[0]))
+#arr_world_cam_est = np.zeros((3,arr_size[0]))
 start = 0
 count = 0
 T_baselink_downlink = transform_mat.transf_mat(quat_down_link[0,:],pos_down_link[0,:])
@@ -53,7 +54,15 @@ T_downlink_downoptframe = transform_mat.transf_mat(quat_down_optical_frame[0,:],
 for k in range(100,train_dim[0]):
     src = imgs[k,:,:,:]*255
     src_gray = np.uint8(cv.cvtColor(src, cv.COLOR_BGR2GRAY))
-    kp_target, des_target = orb.detectAndCompute(src_gray,None)
+    cur_corn = corn[k,:,:]
+    corn_size = cur_corn.shape
+    img_size = src_gray.shape
+    keypts = []
+    for j in range(0,corn_size[1]):
+        keypts.append((int(cur_corn[0,j]),int(cur_corn[1,j])))
+    mask = np.zeros(img_size[:2], dtype="uint8")
+    cv.rectangle(mask, keypts[1], keypts[3], 255, -1)
+    kp_target, des_target = orb.detectAndCompute(src_gray,mask)
     if type(des_target) != type(None):
         T_world_baselink = transform_mat.transf_mat(quat[k,:],pos[k,:])
         T_world_downlink = np.matmul(T_world_baselink,T_baselink_downlink)
@@ -76,7 +85,7 @@ for k in range(100,train_dim[0]):
             pos_target.append(target_coord)
         pos_temp_hom = np.float32(pos_temp).reshape(-1,1,2)
         pos_target_hom = np.float32(pos_target).reshape(-1,1,2)
-        M, mask = cv.findHomography( pos_temp_hom, pos_target_hom,cv.RANSAC,5.0)
+        M, mask = cv.findHomography( pos_temp_hom, pos_target_hom,cv.RANSAC,2.0)
         matchesMask = mask.ravel().tolist()
         inlier_matches = []
         rem = 0
@@ -91,28 +100,32 @@ for k in range(100,train_dim[0]):
             pos_temp_world = dw.world_coord(np.array(pos_temp),logo_temp,rot)
             dist_coeffs = np.zeros((4,1))
             (suc,est_rot,est_trans) = cv.solvePnP(pos_temp_world, np.array(pos_target), K, dist_coeffs, flags=cv.SOLVEPNP_ITERATIVE)
-            rot_out = cv.Rodrigues(est_rot)
-            rot_mat = rot_out[0]
-            T_cam_world = np.matrix([[rot_mat[0,0], rot_mat[0,1], rot_mat[0,2], est_trans[0,0]],
-                      [rot_mat[1,0], rot_mat[1,1], rot_mat[1,2], est_trans[1,0]],
-                      [rot_mat[2,0], rot_mat[2,1], rot_mat[2,2], est_trans[2,0]],
-                      [0,0,0,1]])
-            T_world_cam = np.linalg.inv(T_cam_world)
-            p_cam_origin = np.array([[0],
-                    [0],
-                    [0],
-                    [1]])
-            p_world_cam_est = np.matmul(T_world_cam,p_cam_origin)
-            arr_world_cam_est[:,k] = np.squeeze(p_world_cam_est[0:3,0],axis = 1)
-            hdf5_data["est_cam_pos"].append(np.squeeze(p_world_cam_est[0:3,0],axis = 1))
-            trans_est[:,k] = est_trans[:,0]
+            if np.abs(est_trans[0,0]) < 1000:
+                rot_out = cv.Rodrigues(est_rot)
+                rot_mat = rot_out[0]
+                T_cam_world = np.matrix([[rot_mat[0,0], rot_mat[0,1], rot_mat[0,2], est_trans[0,0]],
+                        [rot_mat[1,0], rot_mat[1,1], rot_mat[1,2], est_trans[1,0]],
+                        [rot_mat[2,0], rot_mat[2,1], rot_mat[2,2], est_trans[2,0]],
+                        [0,0,0,1]])
+                T_world_cam = np.linalg.inv(T_cam_world)
+                p_cam_origin = np.array([[0],
+                        [0],
+                        [0],
+                        [1]])
+                p_world_cam_est = np.matmul(T_world_cam,p_cam_origin)
+                #arr_world_cam_est[:,k] = np.squeeze(p_world_cam_est[0:3,0],axis = 1)
+                hdf5_data["est_cam_pos"].append(np.squeeze(p_world_cam_est[0:3,0],axis = 1))
+                trans_est[:,k] = est_trans[:,0]
+                valid_est[0,k] = 1
+            else:
+                trans_est[:,k] = trans_est[:,k-1]
+                hdf5_data["est_cam_pos"].append(hdf5_data["est_cam_pos"][len(hdf5_data["est_cam_pos"])-1])
         else:
             trans_est[:,k] = trans_est[:,k-1]
-            arr_world_cam_est[:,k] = arr_world_cam_est[:,k-1]
+            #arr_world_cam_est[:,k] = arr_world_cam_est[:,k-1]
             hdf5_data["est_cam_pos"].append(hdf5_data["est_cam_pos"][len(hdf5_data["est_cam_pos"])-1])
             #print(k)
-        # cur_corn = corn[k,:,:]
-        # corn_size = cur_corn.shape
+
         # corn_tup = []
         # for i in range(0,corn_size[1]):
         #     corn_tup.append((float(cur_corn[0,i]),float(cur_corn[1,i])))
@@ -130,22 +143,22 @@ for k in range(100,train_dim[0]):
 pos_origin_cam = np.transpose(pos_origin_cam)[0,0:3,:]
 #pos = np.transpose(pos)
 diff = np.subtract(trans_est,pos_origin_cam)
+valid_diff  = np.multiply(diff,valid_est)
 #diff_corn = np.subtract(trans_corn,pos_origin_cam)
-mse = np.mean(np.square(diff[:,range(start,train_dim[0])]), axis = 1)
+mse = np.mean(np.abs(valid_diff[:,range(start,train_dim[0])]), axis = 1)
 #mse_corn = np.mean(np.square(diff_corn[:,range(start,train_dim[0])]), axis = 1)
 #hor_sum = np.sum(diff[:,range(start,train_dim[0])], axis = 1)
-#print(mse)
+print(mse)
 #print(mse_corn)
 
 #storing world coords in hdf5
 current_dir = '/home/gaetan/data/hdf5/correct_baselink_gt/'
-for i in range(1,len(hdf5_data["est_cam_pos"])):
-    print(hdf5_data["est_cam_pos"][i].shape),
-    print(hdf5_data["gt_cam_pos"][i].shape)
+print(len(hdf5_data["gt_cam_pos"]))
+print(len(hdf5_data["est_cam_pos"]))
 
 def dump(output_dir,hdf5_data,ep):
         print('stored data in',output_dir)
-        output_hdf5_path = output_dir + '/3D_pos' + '.hdf5'
+        output_hdf5_path = output_dir + '/3D_pos_mask' + '.hdf5'
         hdf5_file = h5py.File(output_hdf5_path, "a")
         episode_group = hdf5_file.create_group(str(ep))
         for sensor_name in hdf5_data.keys():

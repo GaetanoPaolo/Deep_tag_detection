@@ -23,7 +23,7 @@ imgs = np.array(dset.get('observation'))
 corn = np.array(dset.get('corners'))
 pos = np.array(dset.get('position'))
 pos_origin_cam = np.array(dset.get('pos_origin_cam'))
-observed_pos = 849
+observed_pos = 660
 src = imgs[observed_pos,:,:,:]*255
 src_gray = np.uint8(cv.cvtColor(src, cv.COLOR_BGR2GRAY))
 
@@ -31,11 +31,19 @@ src_gray = np.uint8(cv.cvtColor(src, cv.COLOR_BGR2GRAY))
 #creating keypoint matchers and finders
 orb = cv.ORB_create()
 bf = cv.BFMatcher_create(cv.NORM_HAMMING,crossCheck=True)
+#creating mask where keypoints have to be found
+cur_corn = corn[observed_pos,:,:]
+corn_size = cur_corn.shape
+img_size = src_gray.shape
+keypts = []
+for j in range(0,corn_size[1]):
+    keypts.append((int(cur_corn[0,j]),int(cur_corn[1,j])))
+mask = np.zeros(img_size[:2], dtype="uint8")
+cv.rectangle(mask, keypts[1], keypts[3], 255, -1)
 #calculating keypoints and finding the matching ones
-
 kp_temp, des_temp = orb.detectAndCompute(logo_temp,None)
 #print(kp_temp[1].pt)
-kp_target, des_target = orb.detectAndCompute(src_gray,None)
+kp_target, des_target = orb.detectAndCompute(src_gray,mask)
 matches = bf.match(des_temp, des_target)
 #import pdb; pdb.set_trace()
 matches = sorted(matches,key=lambda x:x.distance)
@@ -50,7 +58,6 @@ pos_target = []
 # if result incorrect => calibrate camera_
 fx = 119
 fy = 119
-img_size = src_gray.shape
 K = np.array([[fx,0,img_size[1]/2],
                 [0,fy,img_size[0]/2],
                 [0,0,1]])
@@ -65,7 +72,7 @@ for m in range(0,len(matches)):
 pos_temp_hom = np.float32(pos_temp).reshape(-1,1,2)
 pos_target_hom = np.float32(pos_target).reshape(-1,1,2)
 #Homography takes point inputs as numpy vectors with lists of points as elements
-M, mask = cv.findHomography( pos_temp_hom, pos_target_hom,cv.RANSAC,5.0)
+M, mask = cv.findHomography( pos_temp_hom, pos_target_hom,cv.RANSAC,2.0)
 matchesMask = mask.ravel().tolist()
 inlier_matches = []
 rem = 0
@@ -85,13 +92,12 @@ plt.imshow(ORB_inlier_matches),plt.show()
 pos_temp_world = dw.world_coord(np.array(pos_temp),logo_temp,rot)
 dist_coeffs = np.zeros((4,1))
 (suc,rot,trans) = cv.solvePnP(pos_temp_world, np.array(pos_target), K, dist_coeffs, flags=cv.SOLVEPNP_ITERATIVE)
-print(K)
-print(pos_temp_world)
-print(np.array(pos_target))
+# print(K)
+# print(pos_temp_world)
+# print(np.array(pos_target))
 print(trans)
 #computing the translation in world coordinates 
-cur_corn = corn[observed_pos,:,:]
-corn_size = cur_corn.shape
+
 corn_tup = []
 for i in range(0,corn_size[1]):
     corn_tup.append((float(cur_corn[0,i]),float(cur_corn[1,i])))
@@ -110,12 +116,12 @@ c_world = [(abs_x_max,-abs_y_max,z),(-abs_x_max,-abs_y_max,z),(-abs_x_max,abs_y_
 (suc_corn,rot_corn,trans_corn) = cv.solvePnP(np.array(c_world), np.array(corn_tup), K, dist_coeffs, flags=cv.SOLVEPNP_ITERATIVE)
 print(trans_corn)
 print(pos_origin_cam[observed_pos,:])
-print(pos[observed_pos,:])
+#print(pos[observed_pos,:])
 img2 = imgs[observed_pos,:,:,:]
-keypts = []
-for j in range(0,corn_size[1]):
-    keypts.append((int(cur_corn[0,j]),int(cur_corn[1,j])))
+
+print(keypts)
 cv.drawContours(img2,[np.array(keypts)],0,(255,0,0),1)
+#cv.drawContours(img2,keypts,0,(255,0,0),1)
 plt.imshow(img2),plt.show()  
 
 
