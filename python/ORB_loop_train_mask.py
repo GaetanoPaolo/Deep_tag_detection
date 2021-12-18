@@ -26,7 +26,7 @@ pos_down_link = np.array(dset.get("pos_down_link"))
 quat_down_link = np.array(dset.get("quat_down_link"))
 pos_down_optical_frame = np.array(dset.get("pos_down_optical_frame"))
 quat_down_optical_frame = np.array(dset.get("quat_down_optical_frame"))
-hdf5_data = {"gt_cam_pos": [], "est_cam_pos": []}
+hdf5_data = {"gt_cam_pos": [], "est_cam_pos": [],'gt_orig_pos':[],'est_orig_pos':[],'observation':[]}
 #initiating necessary parameters
 fx = 119
 fy = 119
@@ -47,6 +47,7 @@ trans_corn = np.zeros((3,arr_size[0]))
 valid_est = np.zeros((1,arr_size[0]))
 #arr_world_cam = np.zeros((3,arr_size[0]))
 #arr_world_cam_est = np.zeros((3,arr_size[0]))
+pos_origin_cam = np.transpose(pos_origin_cam)[0,0:3,:]
 start = 0
 count = 0
 T_baselink_downlink = transform_mat.transf_mat(quat_down_link[0,:],pos_down_link[0,:])
@@ -69,7 +70,6 @@ for k in range(100,train_dim[0]):
         T_world_downoptframe = np.matmul(T_world_downlink,T_downlink_downoptframe)
         #pos_world_cam = T_world_downoptframe[0:3,3]
         #arr_world_cam[:,k] = np.squeeze(T_world_downoptframe[0:3,3],axis = 1)
-        hdf5_data["gt_cam_pos"].append(np.squeeze(T_world_downoptframe[0:3,3],axis = 1))
         if start == 0:
             start = k
         matches = bf.match(des_temp, des_target)
@@ -115,15 +115,19 @@ for k in range(100,train_dim[0]):
                 p_world_cam_est = np.matmul(T_world_cam,p_cam_origin)
                 #arr_world_cam_est[:,k] = np.squeeze(p_world_cam_est[0:3,0],axis = 1)
                 hdf5_data["est_cam_pos"].append(np.squeeze(p_world_cam_est[0:3,0],axis = 1))
+                hdf5_data["gt_cam_pos"].append(np.squeeze(T_world_downoptframe[0:3,3],axis = 1))
+                hdf5_data["est_orig_pos"].append(est_trans[0:3,0])
+                hdf5_data["gt_orig_pos"].append(pos_origin_cam[0:3,k])
+                hdf5_data["observation"].append(imgs[k,:,:,:])
                 trans_est[:,k] = est_trans[:,0]
                 valid_est[0,k] = 1
             else:
                 trans_est[:,k] = trans_est[:,k-1]
-                hdf5_data["est_cam_pos"].append(hdf5_data["est_cam_pos"][len(hdf5_data["est_cam_pos"])-1])
+                #hdf5_data["est_cam_pos"].append(hdf5_data["est_cam_pos"][len(hdf5_data["est_cam_pos"])-1])
         else:
             trans_est[:,k] = trans_est[:,k-1]
             #arr_world_cam_est[:,k] = arr_world_cam_est[:,k-1]
-            hdf5_data["est_cam_pos"].append(hdf5_data["est_cam_pos"][len(hdf5_data["est_cam_pos"])-1])
+            #hdf5_data["est_cam_pos"].append(hdf5_data["est_cam_pos"][len(hdf5_data["est_cam_pos"])-1])
             #print(k)
 
         # corn_tup = []
@@ -140,7 +144,7 @@ for k in range(100,train_dim[0]):
     # print(k),
     # print(trans_est[:,k])
 
-pos_origin_cam = np.transpose(pos_origin_cam)[0,0:3,:]
+
 #pos = np.transpose(pos)
 diff = np.subtract(trans_est,pos_origin_cam)
 valid_diff  = np.multiply(diff,valid_est)
