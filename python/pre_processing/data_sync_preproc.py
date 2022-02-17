@@ -9,7 +9,7 @@ import det_logo_image
 
 # load all the necessary data from the hdf5 file
 #f = h5py.File('/home/gaetan/data/hdf5/test_sim_flight/data3.hdf5', 'r')
-current_dir = '/home/gaetan/data/hdf5/d400/'
+current_dir = '/home/gaetan/data/hdf5/T265/'
 print(current_dir)
 f = h5py.File(current_dir+'data4.hdf5', 'r')
 base_items = list(f.items())
@@ -19,7 +19,7 @@ SIM = False
 print('Items in group 0',list(dset.items()))
 imgs = np.array(dset.get('observation'))
 image_time = np.array(dset.get('image_time'))
-pose_time = np.array(dset.get('odom_time'))
+pose_time = np.array(dset.get('est_time'))
 
 
 
@@ -47,8 +47,8 @@ if SIM:
     hdf5_data['pos_down_optical_frame'].append(pos_down_optical_frame[0,:])
     hdf5_data['quat_down_optical_frame'].append(quat_down_optical_frame[0,:])
 else:
-    pos = np.array(dset.get("odom_position"))
-    quat = np.array(dset.get("odom_orientation"))
+    pos = np.array(dset.get("pos_est"))
+    quat = np.array(dset.get("quat_est"))
     #odom_pos = np.array(dset.get("odom_position"))
     #odom_quat = np.array(dset.get("odom_orientation"))
     #odom_time = np.array(dset.get("odom_time"))
@@ -77,10 +77,10 @@ else:
     img_short = 0
     it_len2 = image_time.shape[0]
 first = 0
-
+print(img_short)
 def dump(output_dir,hdf5_data,ep):
         print('stored data in',output_dir)
-        output_hdf5_path = output_dir + '/data4_correct_gt' + '.hdf5'
+        output_hdf5_path = output_dir + '/data4_sync' + '.hdf5'
         hdf5_file = h5py.File(output_hdf5_path, "a")
         episode_group = hdf5_file.create_group(str(ep))
         for sensor_name in hdf5_data.keys():
@@ -91,18 +91,25 @@ def dump(output_dir,hdf5_data,ep):
 count = 0
 ep = 1
 for i in range(0,it_len1):
-    count += 1
-    cur_ref_time_ns = np.round(short_time[i,0]/(10**8),1)
+    #cur_ref_time_ns = np.round(short_time[i,0]/(10**8),1)
+    cur_ref_time_ns = np.floor(short_time[i,0]/(10**7))
     cur_ref_time_ms = np.round(short_time[i,1]/(10**(-7)),2)
     cur_ref_time = [cur_ref_time_ns,cur_ref_time_ms]
     for j in range(0,it_len2):
-        odom_time_ns = np.round(long_time[j,0]/(10**8),1)
+        #odom_time_ns = np.round(long_time[j,0]/(10**8),1)
+        odom_time_ns = np.floor(long_time[j,0]/(10**7))
         odom_time_ms = np.round(long_time[j,1]/(10**(-7)),2)
         odom_time = [odom_time_ns, odom_time_ms]
+        # print(cur_ref_time),
+        # print(odom_time)
+        # print(cur_ref_time == odom_time)
+        # print('__________________________')
+        # time.sleep(0.5)
         if cur_ref_time == odom_time:
-            hdf5_data["pose_time"].append(long_time[j,:])
+            count += 1
+            hdf5_data["image_time"].append(long_time[j,:])
             #hdf5_data["odom_time"].append(odom_time[j,:])
-            hdf5_data["image_time"].append(short_time[i,:])
+            hdf5_data["pose_time"].append(short_time[i,:])
             if img_short == 1:
                 print ('i'),
                 print(i)
@@ -111,14 +118,6 @@ for i in range(0,it_len1):
                     hdf5_data["position"].append(pos[j,:])
                     hdf5_data["orientation"].append(quat[j,:])
                     if SIM:
-                        # std_corners = [[0,0],[0,0],[0,0],[0,0]]
-                        # corn = cd_harris.cornerHarris(140,imgs[i,:,:,:]*255)
-                        # if len(corn) > 4:
-                        #     rn = 4
-                        # else:
-                        #     rn = len(corn)
-                        # for t in range(0,rn):
-                        #     std_corners[t] = corn[t]
                         
                         hdf5_data["pos_base_footprint"].append(pos_base_footprint[j,:])
                         hdf5_data["quat_base_footprint"].append(quat_base_footprint[j,:])

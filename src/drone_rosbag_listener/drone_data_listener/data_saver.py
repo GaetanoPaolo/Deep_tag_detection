@@ -40,20 +40,27 @@ class Datasaver:
             rospy.Subscriber('/tf_static', TFMessage,callback=self._tfstatic_callback)
             self.size = {'height': 200, 'width': 200, 'depth': 3}
         else:
-            rospy.Subscriber('/d400/color/image_raw',
+            rospy.Subscriber('/camera/fisheye1/image_raw',
                                 Image,
                                 callback=self._camera_callback)
-            rospy.Subscriber('/tf',
-                                TFMessage,
-                                callback=self._tf_callback_d400)
-            rospy.Subscriber('/d400/color/camera_info',
+            # rospy.Subscriber('/tf',
+            #                     TFMessage,
+            #                     callback=self._tf_callback_d400)
+            rospy.Subscriber('/camera/fisheye1/camera_info',
                                 CameraInfo,
                                 callback=self._camera_info_callback
                                 )
-            rospy.Subscriber('/mavros/local_position/odom',
-                                Odometry,
-                                callback=self._odom_callback)
-            self.size = {'height': 480, 'width': 640, 'depth': 3}
+            # rospy.Subscriber('/mavros/local_position/odom',
+            #                     Odometry,
+            #                     callback=self._odom_callback)
+            rospy.Subscriber('/mavros/local_position/pose',
+                                PoseStamped,
+                                callback = self._mavrospose_callback)
+            rospy.Subscriber('/drone_pose_estimate',
+                                PoseStamped,
+                                callback = self._estpose_callback)
+            #self.size = {'height': 480, 'width': 640, 'depth': 3}
+            self.size = {'height': 800, 'width': 848, 'depth': 1}
         self._episode_id = -1
         self._reset()
 
@@ -76,8 +83,8 @@ class Datasaver:
             'pos_down_link':[],'quat_down_link':[],'pos_down_optical_frame':[],'quat_down_optical_frame':[],
             'image_time': [], 'pose_time': []}
         else:
-            self._hdf5_data = {"observation": [], "pos_camera_pose_frame": [],"quat_camera_pose_frame": [], "pos_/d400_link":[],"quat_/d400_link":[],'odom_position':[],'odom_orientation':[],'image_time': [], 'pose_time': [], 'odom_time':[],'K':[], 'P':[]}
-            
+            #self._hdf5_data = {"observation": [], "pos_camera_pose_frame": [],"quat_camera_pose_frame": [], "pos_/d400_link":[],"quat_/d400_link":[],'odom_position':[],'odom_orientation':[],'image_time': [], 'pose_time': [], 'odom_time':[],'K':[], 'P':[]}
+            self._hdf5_data = {"observation": [], "pos_mavros": [],"pos_est": [], "quat_mavros":[],"quat_est":[],"mavros_time":[],"est_time":[],'image_time': [],'K':[], 'P':[]}
     
     def _camera_callback(self, msg):
         h = getattr(msg, 'header')
@@ -118,6 +125,28 @@ class Datasaver:
         orientation_vect = [quaternion.x, quaternion.y, quaternion.z, quaternion.w]
         self._hdf5_data["position"].append(pos_vect)
         self._hdf5_data["orientation"].append(orientation_vect)
+    def _mavrospose_callback(self,msg):
+        h = getattr(msg, 'header')
+        stamp = h.stamp
+        self._hdf5_data["mavros_time"].append([stamp.nsecs, stamp.secs*1e-9])
+        p = getattr(msg, 'pose')
+        position = p.position
+        quaternion = p.orientation
+        pos_vect = [position.x, position.y, position.z]
+        orientation_vect = [quaternion.x, quaternion.y, quaternion.z, quaternion.w]
+        self._hdf5_data["pos_mavros"].append(pos_vect)
+        self._hdf5_data["quat_mavros"].append(orientation_vect)
+    def _estpose_callback(self,msg):
+        h = getattr(msg, 'header')
+        stamp = h.stamp
+        self._hdf5_data["est_time"].append([stamp.nsecs, stamp.secs*1e-9])
+        p = getattr(msg, 'pose')
+        position = p.position
+        quaternion = p.orientation
+        pos_vect = [position.x, position.y, position.z]
+        orientation_vect = [quaternion.x, quaternion.y, quaternion.z, quaternion.w]
+        self._hdf5_data["pos_est"].append(pos_vect)
+        self._hdf5_data["quat_est"].append(orientation_vect)
     def _tf_callback_d400(self,msg):
         transfs = getattr(msg, 'transforms')
         cur_transf = transfs[0]
@@ -156,7 +185,7 @@ class Datasaver:
 print(__name__)
 if __name__ == '__main__':
     print('protocol started')
-    output_directory = '/home/gaetan/data/hdf5/d400'
+    output_directory = '/home/gaetan/data/hdf5/T265'
     data_saver = Datasaver(output_dir=output_directory)
     print('Datasaver_created')
     data_saver.run()

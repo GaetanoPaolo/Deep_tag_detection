@@ -44,4 +44,6 @@ def corner_proj(imgs,quat,pos,quat_down_link,pos_down_link,quat_down_optical_fra
     for j in range(0,c_size[1]):
         c_cam[0:3,j]=c_cam[0:3,j]/c_cam[2,j]
     c_proj = np.matmul(K,c_cam[0:3,:])
+    #c_proj = world corner coordinates transformed to camera coordinates and projected onto the 2D image
+    #c_cam  = world origin position in world coordinates converted to camera coordinates
     return c_proj,c0_cam

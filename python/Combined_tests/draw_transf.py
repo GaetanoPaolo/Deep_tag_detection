@@ -42,15 +42,16 @@ def rearrange_target_BB(tempBB,targetBB,target_keypts,temp_keypts):
         diff_mat[pos[0],:] = tot_max
         diff_mat[:,pos[1]] = tot_max
     return np.array(BB_target)
-def world_coord(pts,temp,rot):
-    size = temp.shape
+def world_coord(pts,size,rot):
+    #size = pixel dimensions of the template
     dim = pts.shape
     vert_ratio = 0.985/max(size)
     horiz_ratio = 0.68/min(size)
     #inverting order of position indices due to the x direction being along the long side
     #and y being along the short side in gazebo
     x_origin = round(max(size)/2)
-    y_origin = round(max(size)/2)
+    #y_origin = round(max(size)/2)
+    y_origin = round(min(size)/2)
     if rot == 0:
         pt_origin = np.array([int(x_origin), int(y_origin)])
         world_pts = []

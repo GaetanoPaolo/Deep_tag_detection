@@ -149,11 +149,12 @@ for k in range(100,train_dim[0]):
 diff = np.subtract(trans_est,pos_origin_cam)
 valid_diff  = np.multiply(diff,valid_est)
 #diff_corn = np.subtract(trans_corn,pos_origin_cam)
-mse = np.mean(np.abs(valid_diff[:,range(start,train_dim[0])]), axis = 1)
+mae = np.mean(np.abs(valid_diff[:,range(start,train_dim[0])]), axis = 1)
+mse = np.mean(np.square(valid_diff[:,range(start,train_dim[0])]), axis = 1)
 #mse_corn = np.mean(np.square(diff_corn[:,range(start,train_dim[0])]), axis = 1)
 #hor_sum = np.sum(diff[:,range(start,train_dim[0])], axis = 1)
+print(mae)
 print(mse)
-#print(mse_corn)
 
 #storing world coords in hdf5
 current_dir = '/home/gaetan/data/hdf5/correct_baselink_gt/'
@@ -170,7 +171,7 @@ def dump(output_dir,hdf5_data,ep):
                 sensor_name, data=np.stack(hdf5_data[sensor_name])
             )
         hdf5_file.close()
-dump(current_dir,hdf5_data,'3D_pos')
+#dump(current_dir,hdf5_data,'3D_pos')
 
 
 

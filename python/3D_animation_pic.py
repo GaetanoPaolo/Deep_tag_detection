@@ -40,4 +40,7 @@ for i in range(1,size[0]):
     if count == 20:
         plt.clf()
         count = 0
+    if i == 1:
+        plt.pause(120)
+
 plt.show()

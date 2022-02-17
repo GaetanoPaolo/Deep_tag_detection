@@ -2,12 +2,13 @@ import numpy as np
 from matplotlib import pyplot as plt
 import cv2 as cv
 
-def crop_img(logo_temp):
+def crop_img(logo_temp,scale):
     size = logo_temp.shape
+    print(size)
     horiz_bounds = []
     vert_bounds = []
     tresh = 250
-    rng = range(10,30)
+    rng = range(10*scale,30*scale)
     for j in range(0,size[0]):
         if all(logo_temp[j,rng] < tresh) and all(logo_temp[j+1,rng] > tresh):
             vert_bounds.append(j)
