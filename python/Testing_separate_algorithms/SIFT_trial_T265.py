@@ -31,7 +31,7 @@ quat = np.array(dset2.get('orientation'))
 rel_pos = np.array(dset2.get('relative_position'))
 img_stamp = np.array(dset2.get('image_time'))
 pose_stamp = np.array(dset2.get('pose_time'))
-observed_pos =135
+observed_pos =220
 src = imgs[observed_pos,:,:,:]*255
 src_gray = np.uint8(src)
 plt.imshow(imgs[observed_pos,:,:,:]),plt.show()

@@ -9,10 +9,10 @@ import itertools
 import draw_transf as dw
 import transform_mat as tm
 #load the logo template
-logo_temp = cv.imread('/home/gaetan/code/simulation_ws/src/my_simulations/models/psi_logo/materials/textures/poster-psi-drone-logo-1percent.png',0)
+logo_temp = cv.imread('/home/gaetan/code/simulation_ws/src/my_simulations/models/psi_logo/materials/textures/poster-psi-drone-logo-10percent.png',0)
 logo_temp_color = cv.imread('/home/gaetan/code/simulation_ws/src/my_simulations/models/psi_logo/materials/textures/poster-psi-drone-logo.png')
 #The scale var indicates the percentage kept from the original logo resolution
-scale = 1
+scale = 10
 rot = 0
 plt.imshow(logo_temp),plt.show()
 logo_temp = crop.crop_img(logo_temp,scale)
@@ -23,7 +23,6 @@ dset1 = f.get('1')
 K = np.array(dset1.get('K')).reshape((3,3))
 # ILoad other parameters and images from chosen episode
 dset2 = f.get('1')
-print(base_items)
 group_items = list(dset2.items())
 imgs = np.array(dset2.get('observation'))
 pos = np.array(dset2.get('position'))
@@ -31,7 +30,7 @@ quat = np.array(dset2.get('orientation'))
 rel_pos = np.array(dset2.get('relative_position'))
 img_stamp = np.array(dset2.get('image_time'))
 pose_stamp = np.array(dset2.get('pose_time'))
-observed_pos =265
+observed_pos =245
 src = imgs[observed_pos,:,:,:]*255
 src_gray = np.uint8(src)
 plt.imshow(imgs[observed_pos,:,:,:]),plt.show()

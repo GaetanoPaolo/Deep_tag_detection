@@ -9,23 +9,24 @@ import det_logo_image
 
 # load all the necessary data from the hdf5 file
 #f = h5py.File('/home/gaetan/data/hdf5/test_sim_flight/data3.hdf5', 'r')
-current_dir = '/home/gaetan/data/hdf5/T265/'
+current_dir = '/home/gaetan/data/hdf5/altitude_test/'
 print(current_dir)
 f = h5py.File(current_dir+'data4.hdf5', 'r')
 base_items = list(f.items())
 #print('Groups:',base_items)
 dset = f.get('0')
-SIM = False
+SIM = True
 print('Items in group 0',list(dset.items()))
 imgs = np.array(dset.get('observation'))
 image_time = np.array(dset.get('image_time'))
-pose_time = np.array(dset.get('est_time'))
+
 
 
 
 
 # define new dict for hdf5 storage
 if SIM:
+    pose_time = np.array(dset.get('pose_time'))
     pos = np.array(dset.get('position'))
     quat = np.array(dset.get('orientation'))
     pos_base_footprint = np.array(dset.get("pos_base_footprint"))
@@ -47,6 +48,7 @@ if SIM:
     hdf5_data['pos_down_optical_frame'].append(pos_down_optical_frame[0,:])
     hdf5_data['quat_down_optical_frame'].append(quat_down_optical_frame[0,:])
 else:
+    pose_time = np.array(dset.get('est_time'))
     pos = np.array(dset.get("pos_est"))
     quat = np.array(dset.get("quat_est"))
     #odom_pos = np.array(dset.get("odom_position"))
@@ -59,6 +61,7 @@ else:
     hdf5_data['P'].append(P[0,:])
 #rel_pos = pos
 pos_size = pos.shape[0]
+print(pose_time.shape)
 if pose_time.shape[0] > pos_size:
     pose_time_amount = pos_size
 else:
@@ -84,6 +87,7 @@ def dump(output_dir,hdf5_data,ep):
         hdf5_file = h5py.File(output_hdf5_path, "a")
         episode_group = hdf5_file.create_group(str(ep))
         for sensor_name in hdf5_data.keys():
+            print(sensor_name)
             episode_group.create_dataset(
                 sensor_name, data=np.stack(hdf5_data[sensor_name])
             )
@@ -171,7 +175,17 @@ for i in range(0,it_len1):
         dump(current_dir,hdf5_data,ep)
         count = 0
         ep += 1
-        hdf5_data = {"observation": [], "position": [],"orientation": [], 'relative_position':[],'image_time': [], 'pose_time': []}
+        if SIM:
+            hdf5_data = {"observation": [], "position": [],"orientation": [],"corners":[],"pos_origin_cam":[],"pos_base_footprint": [],"quat_base_footprint": [], 
+            'pos_base_stabilized':[],'quat_base_stabilized':[],'pos_base_link':[],'quat_base_link':[],
+            'pos_down_link':[],'quat_down_link':[],'pos_down_optical_frame':[],'quat_down_optical_frame':[],
+            'image_time': [], 'pose_time': []}
+            hdf5_data['pos_down_link'].append(pos_down_link[0,:])
+            hdf5_data['quat_down_link'].append(quat_down_link[0,:])
+            hdf5_data['pos_down_optical_frame'].append(pos_down_optical_frame[0,:])
+            hdf5_data['quat_down_optical_frame'].append(quat_down_optical_frame[0,:])
+        else:
+            hdf5_data = {"observation": [], "position": [],"orientation": [], 'relative_position':[],'image_time': [], 'pose_time': []}
 
 print('Items in group dict',list(hdf5_data.keys()))
 #dump the new dict in new hdf5 file

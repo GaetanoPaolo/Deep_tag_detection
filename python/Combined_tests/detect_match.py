@@ -33,6 +33,28 @@ def detect_match(K,kp_temp,des_temp,temp_shape,detector,bf,src_gray):
     pos_temp_world = dw.world_coord(np.array(pos_temp),temp_shape,0)
     dist_coeffs = np.zeros((4,1))
     (suc,rot,trans,inliers) = cv.solvePnPRansac(pos_temp_world, np.array(pos_target), K, dist_coeffs, flags=cv.SOLVEPNP_ITERATIVE, iterationsCount=2000, reprojectionError=8)
-    if type(inliers) == 'NoneType':
-        trans = np.zeros((3,1))
-    return trans
+    if isinstance(inliers,type(None)):
+        trans = np.array([[0.0],
+                        [0.0],
+                        [0.0]])
+    elif len(inliers) < 40:
+        trans = np.array([[0.0],
+                        [0.0],
+                        [0.0]])
+    return trans,inliers
+
+def resolution_sel(est_orb_lst,rel_pos_c):
+    alt_diff = []
+    for i in range(0,len(est_orb_lst)):
+        cur_est = est_orb_lst[i]
+        cur_diff = abs(rel_pos_c[2,0]-cur_est[2,0])
+        alt_diff.append(cur_diff)
+    min_alt_diff = min(alt_diff)
+    min_index = alt_diff. index(min_alt_diff) 
+    
+    #extending the orb estimate with the best resolution
+    res_list = [1,2,5,10]
+    ext_orb_res = np.zeros((4,1))
+    ext_orb_res[0:3,0] = np.squeeze(est_orb_lst[min_index],axis = 1)
+    ext_orb_res[3,0] = res_list[min_index]
+    return ext_orb_res

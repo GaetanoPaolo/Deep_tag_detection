@@ -8,28 +8,29 @@ import crop
 import itertools
 import draw_transf as dw
 #load the logo template
-logo_temp = cv.imread('/home/gaetan/code/simulation_ws/src/my_simulations/models/psi_logo/materials/textures/poster-psi-drone-logo-2percent.png',0)
+logo_temp = cv.imread('/home/gaetan/code/simulation_ws/src/my_simulations/models/psi_logo/materials/textures/poster-psi-drone-logo-1percent.png',0)
 rot = 0
 
 #removing the blue edge of the logo template to detect logo itself
-logo_temp = crop.crop_img(logo_temp,2)
+logo_temp = crop.crop_img(logo_temp,1)
 plt.imshow(logo_temp),plt.show()
 # load the labelled gazebo data
-f = h5py.File('/home/gaetan/data/hdf5/correct_baselink_gt/data4_correct_gt.hdf5', 'r+')
+f = h5py.File('/home/gaetan/data/hdf5/altitude_test/data4_sync.hdf5', 'r+')
 base_items = list(f.items())
-dset = f.get('labelled_data')
+print(base_items)
+dset = f.get('6')
 imgs = np.array(dset.get('observation'))
 corn = np.array(dset.get('corners'))
 pos = np.array(dset.get('position'))
 pos_origin_cam = np.array(dset.get('pos_origin_cam'))
-observed_pos = 560
+observed_pos = 236
 src = imgs[observed_pos,:,:,:]*255
 src_gray = np.uint8(cv.cvtColor(src, cv.COLOR_BGR2GRAY))
 plt.imshow(src_gray),plt.show()
 
 #code source till line 31: https://datahacker.rs/feature-matching-methods-comparison-in-opencv/
 #creating keypoint matchers and finders
-orb = cv.ORB_create(500,1.1,8,21,0,2,0,21,20)
+orb = cv.ORB_create(500,1.1,8,11,0,2,0,11,5)
 bf = cv.BFMatcher_create(cv.NORM_HAMMING,crossCheck=True)
 
 #creating mask where keypoints have to be found

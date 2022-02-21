@@ -19,6 +19,7 @@ logo_temp_10 = crop.crop_img(logo_temp_10,10)
 # load the camera parameters stored in episode 1
 f = h5py.File('/home/gaetan/data/hdf5/T265/data4_sync.hdf5', 'r+')
 base_items = list(f.items())
+print(base_items)
 dset1 = f.get('1')
 K = np.array(dset1.get('K')).reshape((3,3))
 
@@ -57,24 +58,27 @@ kp_temp_sift_5, des_temp_sift_5 = sift.detectAndCompute(logo_temp_5,None)
 kp_temp_sift_10, des_temp_sift_10 = sift.detectAndCompute(logo_temp_10,None)
 
 #defining the arrays in which the results will be stored 
-trans_est_orb =[]
-trans_est_sift = []
+
+trans_est_orb = [] 
 drone_est = []
+trans_est_sift = []
 #parsing the workable dataset for method evaluation
 for observed_pos in range(120,set_size[0]):
     src = imgs[observed_pos,:,:,:]*255
     src_gray = np.uint8(src)
 
     #computing ORB estimates for all different resolution percentages
-    est_orb_1 = det.detect_match(K,kp_temp_orb_1,des_temp_orb_1,logo_temp_1.shape,orb,bf_HAMMING,src_gray)
-    est_orb_2 = det.detect_match(K,kp_temp_orb_2,des_temp_orb_2,logo_temp_2.shape,orb,bf_HAMMING,src_gray)
-    est_orb_5 = det.detect_match(K,kp_temp_orb_5,des_temp_orb_5,logo_temp_5.shape,orb,bf_HAMMING,src_gray)
-    est_orb_10 = det.detect_match(K,kp_temp_orb_10,des_temp_orb_10,logo_temp_10.shape,orb,bf_HAMMING,src_gray)
+    est_orb_1,inl = det.detect_match(K,kp_temp_orb_1,des_temp_orb_1,logo_temp_1.shape,orb,bf_HAMMING,src_gray)
+    est_orb_2,inl = det.detect_match(K,kp_temp_orb_2,des_temp_orb_2,logo_temp_2.shape,orb,bf_HAMMING,src_gray)
+    est_orb_5,inl = det.detect_match(K,kp_temp_orb_5,des_temp_orb_5,logo_temp_5.shape,orb,bf_HAMMING,src_gray)
+    est_orb_10,inl = det.detect_match(K,kp_temp_orb_10,des_temp_orb_10,logo_temp_10.shape,orb,bf_HAMMING,src_gray)
     est_orb_lst = [est_orb_1,est_orb_2,est_orb_5,est_orb_10]
-
     #computing SIFT estimate for 2 percent resolution (for scale invariance performance test)
-    est_sift_2 = det.detect_match(K,kp_temp_sift_2,des_temp_sift_2,logo_temp_2.shape,sift,bf_L2,src_gray)
-    trans_est_sift.append(est_sift_2[:,0])
+    #est_sift_1,inliers = det.detect_match(K,kp_temp_sift_1,des_temp_sift_1,logo_temp_1.shape,sift,bf_L2,src_gray)
+    est_sift_2,inliers = det.detect_match(K,kp_temp_sift_2,des_temp_sift_2,logo_temp_2.shape,sift,bf_L2,src_gray)
+    # est_sift_5,inliers = det.detect_match(K,kp_temp_sift_5,des_temp_sift_5,logo_temp_5.shape,sift,bf_L2,src_gray)
+    # est_sift_10,inliers = det.detect_match(K,kp_temp_sift_10,des_temp_sift_10,logo_temp_10.shape,sift,bf_L2,src_gray)
+    # est_sift_lst = [est_sift_1,est_sift_2,est_sift_5,est_sift_10]
     #computing the estimated tag position relative to the camera (from drone world axes position estimate)
     rel_pos_w = -rel_pos[observed_pos,:]
     #Transforming from world axes to axes attached to the drone
@@ -86,49 +90,26 @@ for observed_pos in range(120,set_size[0]):
                 [0,0,-1]])
     rel_pos_d = np.matmul(R_w_d,np.array(rel_pos_w))
     rel_pos_c = np.matmul(R_d_c,np.transpose(rel_pos_d))
-    drone_est.append(rel_pos_c[:,0])
+    drone_est.append(list(rel_pos_c.astype(np.float64)))
     #selecting which orb estimate is closest to the altitude estimated on drone 
     # (assuming this provides a measure of the general accuracy)
-    alt_diff = []
-    for i in range(0,len(est_orb_lst)):
-        cur_est = est_orb_lst[i]
-        cur_diff = abs(rel_pos_c[2,0]-cur_est[2,0])
-        alt_diff.append(cur_diff)
-    min_alt_diff = min(alt_diff)
-    min_index = alt_diff. index(min_alt_diff) 
-    
-    #extending the orb estimate with the best resolution
-    res_list = [1,2,5,10]
-    ext_orb_res = np.zeros((4,1))
-    ext_orb_res[0:3,0] = np.squeeze(est_orb_lst[min_index],axis = 1)
-    ext_orb_res[3,0] = res_list[min_index]
-    trans_est_orb.append(ext_orb_res)
+    #est_sift_res = det.resolution_sel(est_sift_lst,rel_pos_c)
+    est_orb_res = det.resolution_sel(est_orb_lst,rel_pos_c)
+    trans_est_sift.append(list(est_sift_2.astype(np.float64)))
+    trans_est_orb.append(list(est_orb_res.astype(np.float64)))
 
-trans_est_orb =np.array(trans_est_orb)
-trans_est_sift = np.array(trans_est_sift)
-drone_est = np.array(drone_est)
-
-#computing errors
-orb_err = np.squeeze(abs(np.subtract(drone_est,trans_est_orb[:,0:3,:])),axis = 2)
-sift_err = np.squeeze(abs(np.subtract(drone_est,trans_est_sift)),axis = 2)
-drone_est = np.squeeze(drone_est, axis = 2)
-#plot each axis along altitude
-fig, axd = plt.subplot_mosaic([['fist'],
-                               ['second'],
-                               ['third'],
-                               ['fourth']], layout='constrained')
-axd['first'].set_title('ORB best resolution percentage')
-axd['first'].plot(drone_est[:,2],trans_est_orb[:,3])
-axd['second'].set_title('Errors x-axis')
-axd['second'].plot(drone_est[:,2],orb_err[:,0], label = 'ORB')
-axd['second'].plot(drone_est[:,2],sift_err[:,0], label = 'SIFT')
-axd['second'].legend()
-axd['third'].set_title('Errors y-axis')
-axd['third'].plot(drone_est[:,2],orb_err[:,1], label = 'ORB')
-axd['third'].plot(drone_est[:,2],sift_err[:,1], label = 'SIFT')
-axd['third'].legend()
-axd['fourth'].set_title('Errors z-axis')
-axd['fourth'].plot(drone_est[:,2],orb_err[:,2], label = 'ORB')
-axd['fourth'].plot(drone_est[:,2],sift_err[:,2], label = 'SIFT')
-axd['fourth'].legend()
+hdf5_data = {"trans_est_orb": trans_est_orb,"drone_est":drone_est,"trans_est_sift":trans_est_sift}
+#exporting the computations to hdf5
+current_dir = '/home/gaetan/data/hdf5/'
+def dump(output_dir,hdf5_data,ep):
+        print('stored data in',output_dir)
+        output_hdf5_path = output_dir + '/multi_eval_data_15' + '.hdf5'
+        hdf5_file = h5py.File(output_hdf5_path, "a")
+        episode_group = hdf5_file.create_group(str(ep))
+        for sensor_name in hdf5_data.keys():
+            episode_group.create_dataset(
+                sensor_name, data=np.stack(hdf5_data[sensor_name])
+            )
+        hdf5_file.close()
+dump(current_dir,hdf5_data,'multi_eval_data_15')
 

@@ -18,7 +18,7 @@ from nav_msgs.msg import Odometry
 from rosgraph_msgs.msg import Clock
 import custom_utils
 
-SIM = False
+SIM = True
 
 class Datasaver:
     def __init__(self, output_dir):
@@ -185,7 +185,7 @@ class Datasaver:
 print(__name__)
 if __name__ == '__main__':
     print('protocol started')
-    output_directory = '/home/gaetan/data/hdf5/T265'
+    output_directory = '/home/gaetan/data/hdf5/altitude_test'
     data_saver = Datasaver(output_dir=output_directory)
     print('Datasaver_created')
     data_saver.run()
