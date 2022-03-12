@@ -185,7 +185,7 @@ class Datasaver:
 print(__name__)
 if __name__ == '__main__':
     print('protocol started')
-    output_directory = '/home/gaetan/data/hdf5/altitude_test'
+    output_directory = '/home/gaetan/data/hdf5/coca_cola_200res_alt_rot'
     data_saver = Datasaver(output_dir=output_directory)
     print('Datasaver_created')
     data_saver.run()

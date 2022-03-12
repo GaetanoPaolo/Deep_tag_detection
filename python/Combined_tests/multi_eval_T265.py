@@ -35,7 +35,7 @@ pose_stamp = np.array(dset2.get('pose_time'))
 set_size = imgs.shape
 
 #defining the different detectors and matchers
-orb = cv.ORB_create(2000,1.1,8,11,0,2,0,11,5)
+orb = cv.ORB_create(2000,1.1,8,21,0,2,0,21,5)
 sift = cv.SIFT_create(2000,6,0.02,30,1.6,cv.CV_32F)
 brisk = cv.BRISK_create(3,6,0.9)
 bf_HAMMING = cv.BFMatcher_create(cv.NORM_HAMMING,crossCheck=True)
@@ -103,7 +103,7 @@ hdf5_data = {"trans_est_orb": trans_est_orb,"drone_est":drone_est,"trans_est_sif
 current_dir = '/home/gaetan/data/hdf5/'
 def dump(output_dir,hdf5_data,ep):
         print('stored data in',output_dir)
-        output_hdf5_path = output_dir + '/multi_eval_data_15' + '.hdf5'
+        output_hdf5_path = output_dir + '/multi_eval_data_17' + '.hdf5'
         hdf5_file = h5py.File(output_hdf5_path, "a")
         episode_group = hdf5_file.create_group(str(ep))
         for sensor_name in hdf5_data.keys():
@@ -111,5 +111,5 @@ def dump(output_dir,hdf5_data,ep):
                 sensor_name, data=np.stack(hdf5_data[sensor_name])
             )
         hdf5_file.close()
-dump(current_dir,hdf5_data,'multi_eval_data_15')
+dump(current_dir,hdf5_data,'multi_eval_data_17')
 

@@ -16,7 +16,6 @@ def detect_match(K,kp_temp,des_temp,temp_shape,detector,bf,src_gray):
     try:
         matches = bf.match(des_temp, des_target)
         matches = sorted(matches,key=lambda x:x.distance)
-
         pos_temp = []
         pos_target = []
         matched_temp_kpts = []
@@ -34,7 +33,7 @@ def detect_match(K,kp_temp,des_temp,temp_shape,detector,bf,src_gray):
         pos_temp_world = dw.world_coord(np.array(pos_temp),temp_shape,0)
         dist_coeffs = np.zeros((4,1))
         if len(pos_temp) > 3 and len(pos_target) > 3:
-            (suc,rot,trans,inliers) = cv.solvePnPRansac(pos_temp_world, np.array(pos_target), K, dist_coeffs, flags=cv.SOLVEPNP_ITERATIVE, iterationsCount=2000, reprojectionError=8)
+            (suc,rot,trans,inliers) = cv.solvePnPRansac(pos_temp_world, np.array(pos_target), K, dist_coeffs, flags=cv.SOLVEPNP_ITERATIVE, iterationsCount=2000, reprojectionError=2.0)
             if isinstance(inliers,type(None)):
                 trans = zer_res
             elif len(inliers) < 20:
@@ -52,7 +51,7 @@ def resolution_sel(est_orb_lst,rel_pos_c):
     min_index = alt_diff. index(min_alt_diff) 
     
     #extending the orb estimate with the best resolution
-    res_list = [1,2,5,10]
+    res_list = [1,2,5,10,100]
     ext_orb_res = np.zeros((4,1))
     ext_orb_res[0:3,0] = np.squeeze(est_orb_lst[min_index],axis = 1)
     ext_orb_res[3,0] = res_list[min_index]

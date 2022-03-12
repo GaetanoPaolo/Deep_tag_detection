@@ -9,7 +9,7 @@ import det_logo_image
 
 # load all the necessary data from the hdf5 file
 #f = h5py.File('/home/gaetan/data/hdf5/test_sim_flight/data3.hdf5', 'r')
-current_dir = '/home/gaetan/data/hdf5/altitude_test/'
+current_dir = '/home/gaetan/data/hdf5/coca_cola_200res_alt_rot/'
 print(current_dir)
 f = h5py.File(current_dir+'data4.hdf5', 'r')
 base_items = list(f.items())
@@ -68,7 +68,7 @@ else:
     pose_time_amount = pose_time.shape[0]
 #check which timestamps are equal and synchronize images and poses
 if image_time.shape[0] < pose_time_amount:
-    it_len1 = image_time.shape[0]
+    it_len1 = imgs.shape[0]
     long_time = pose_time
     short_time = image_time
     it_len2 = pose_time_amount
@@ -78,7 +78,7 @@ else:
     long_time = image_time
     short_time = pose_time
     img_short = 0
-    it_len2 = image_time.shape[0]
+    it_len2 = imgs.shape[0]
 first = 0
 print(img_short)
 def dump(output_dir,hdf5_data,ep):
@@ -117,7 +117,7 @@ for i in range(0,it_len1):
             if img_short == 1:
                 print ('i'),
                 print(i)
-                if det_logo_image.logo_image(SIM,imgs[i,:,:,:]):
+                if det_logo_image.logo_image(False,imgs[i,:,:,:]):
                     hdf5_data["observation"].append(imgs[i,:,:,:])
                     hdf5_data["position"].append(pos[j,:])
                     hdf5_data["orientation"].append(quat[j,:])
@@ -171,7 +171,7 @@ for i in range(0,it_len1):
                         rel_pos = pos[i,:] - pos_ref
                         hdf5_data["relative_position"].append(rel_pos)
             break
-    if count >= 300:
+    if count >= 50:
         dump(current_dir,hdf5_data,ep)
         count = 0
         ep += 1

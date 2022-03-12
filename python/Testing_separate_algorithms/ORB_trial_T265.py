@@ -8,17 +8,19 @@ import crop
 import itertools
 import draw_transf as dw
 import transform_mat as tm
+import detect_match as dm
 #load the logo template
-logo_temp = cv.imread('/home/gaetan/code/simulation_ws/src/my_simulations/models/psi_logo/materials/textures/poster-psi-drone-logo-10percent.png',0)
+logo_temp = cv.imread('/home/gaetan/code/simulation_ws/src/my_simulations/models/psi_logo/materials/textures/poster-psi-drone-logo-5percent.png',0)
 logo_temp_color = cv.imread('/home/gaetan/code/simulation_ws/src/my_simulations/models/psi_logo/materials/textures/poster-psi-drone-logo.png')
 #The scale var indicates the percentage kept from the original logo resolution
-scale = 10
+scale = 2
 rot = 0
 plt.imshow(logo_temp),plt.show()
 logo_temp = crop.crop_img(logo_temp,scale)
 # load the camera parameters stored in episode 1
 f = h5py.File('/home/gaetan/data/hdf5/T265/data4_sync.hdf5', 'r+')
 base_items = list(f.items())
+print(base_items)
 dset1 = f.get('1')
 K = np.array(dset1.get('K')).reshape((3,3))
 # ILoad other parameters and images from chosen episode
@@ -30,7 +32,7 @@ quat = np.array(dset2.get('orientation'))
 rel_pos = np.array(dset2.get('relative_position'))
 img_stamp = np.array(dset2.get('image_time'))
 pose_stamp = np.array(dset2.get('pose_time'))
-observed_pos =245
+observed_pos =290
 src = imgs[observed_pos,:,:,:]*255
 src_gray = np.uint8(src)
 plt.imshow(imgs[observed_pos,:,:,:]),plt.show()
@@ -40,8 +42,8 @@ print(len(imgs))
 #creating keypoint matchers and finders
 #code source till line 31: https://datahacker.rs/feature-matching-methods-comparison-in-opencv/
 #creating keypoint matchers and finders
-#orb = cv.ORB_create(2000,1.1,8,11,0,2,0,11,10)
-orb = cv.ORB_create(2000,1.1,8,11,0,2,0,11,5)
+#orb = cv.ORB_create(2000,1.1,8,11,0,2,0,11,5)
+orb = cv.ORB_create(2000,1.1,8,21,0,2,0,21,5)
 bf = cv.BFMatcher_create(cv.NORM_HAMMING,crossCheck=True)
 
 #avoid detecting the camera lens edge among the keypoints
@@ -60,6 +62,41 @@ kp_target, des_target = orb.detectAndCompute(src_gray,None)
 print(len(kp_target))
 src_gray_2 = cv.drawKeypoints(src_gray,kp_target,0,(255,0,0),cv.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
 plt.imshow(src_gray_2),plt.show()
+
+#cluster the keypoints to try obtain the correct square
+#finding the corner points by fitting a rectangle around the clustered keypoints
+#https://docs.opencv.org/4.x/d1/d5c/tutorial_py_kmeans_opencv.html
+temp_size = logo_temp.shape
+corn_temp = np.array([[0,0],[0,temp_size[1]],[temp_size[0],temp_size[1]],[temp_size[0],0]])
+diag_temp = np.linalg.norm(np.array([temp_size[0],temp_size[1]]))
+temp_ratio = temp_size[1]/diag_temp
+Z = dm.kp_preproc(kp_target)
+# define criteria and apply kmeans()
+count = 1
+stop = False
+while stop == False:
+    print(count)
+    criteria = (cv.TERM_CRITERIA_EPS + cv.TERM_CRITERIA_MAX_ITER, 10, 1.0)
+    ret,label,center=cv.kmeans(Z,count,None,criteria,10,cv.KMEANS_RANDOM_CENTERS)
+    # Now separate the data, Note the flatten()
+    for i in range(0,count):
+        A = Z[label.ravel()==i]
+        corn_target = dw.findBB_rot(A)
+        dst = np.linalg.norm(np.subtract(corn_target,corn_target[0]),axis = 1)
+        short_side = np.min(dst[1:3])
+        diag = np.max(dst[1:3])
+        ratio = short_side/diag
+        ratio_diff = abs(ratio-temp_ratio)
+        print(ratio_diff)
+        if  ratio_diff < 0.3:
+            stop = True
+            break
+    count += 1
+print('Corn target')
+print(corn_target)
+
+
+#match the keypoints
 matches = bf.match(des_temp, des_target)
 #import pdb; pdb.set_trace()
 matches = sorted(matches,key=lambda x:x.distance)
@@ -86,7 +123,7 @@ for m in range(0,len(matches)):
     pos_target.append(target_coord)
 #apply solvepnp to estimate translation: https://learnopencv.com/head-pose-estimation-using-opencv-and-dlib/
 pos_temp_world = dw.world_coord(np.array(pos_temp),logo_temp,rot)
-dist_coeffs = np.zeros((4,1))
+dist_coeffs = np.array([-0.014216,0.060412,-0.054711,0.011151])
 (suc,rot,trans,inliers) = cv.solvePnPRansac(pos_temp_world, np.array(pos_target), K, dist_coeffs, flags=cv.SOLVEPNP_ITERATIVE, iterationsCount=2000, reprojectionError=8)
 print('Inlier match amount')
 print(len(inliers))

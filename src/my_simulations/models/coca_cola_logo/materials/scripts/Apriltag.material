@@ -1,0 +1,17 @@
+material coca_cola_logo
+{
+  technique
+  {
+    pass
+    {
+      lighting off
+      texture_unit
+      {
+        texture cocacola.jpg
+        filtering none none none
+        scale 1.0 1.0
+      }
+    }
+  }
+}
+
