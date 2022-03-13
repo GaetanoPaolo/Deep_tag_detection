@@ -77,15 +77,19 @@ def rectangle_side_fractal(corn_list,des_len):
         return out_lst
     else:
         return rectangle_side_fractal(out_lst,des_len)
-def mean_keypoint_dist(kpts,pt):
+def mean_keypoint_dist_temp(kpts,pt):
     diffs = np.zeros((len(kpts),1))
     for m in range(0,len(kpts)):
         cur_pt = kpts[m].pt
         int_pt = np.array([cur_pt[0],cur_pt[1]])
-        diff = np.subtract(int_pt,np.array(pt))
-        norm = np.linalg.norm(diff)
-        diffs[m,0] = norm
+    diff = np.subtract(int_pt,np.array(pt))
+    norm = np.linalg.norm(diff)
+    diffs[m,0] = norm
     return np.mean(diffs,axis = 0)
+def mean_keypoint_dist_target(kpts,pt):
+    diff = np.subtract(kpts,np.array(pt))
+    norm = np.linalg.norm(diff, axis=1)
+    return np.mean(diff,axis = 0)
 
 def kp_preproc(kpts):
     Z = np.zeros((len(kpts),2))

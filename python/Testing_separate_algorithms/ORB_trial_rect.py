@@ -10,7 +10,7 @@ import draw_transf as dw
 import detect_match as dm
 from collections import deque
 #load the logo template
-logo_temp = cv.imread('/home/gaetan/code/simulation_ws/src/my_simulations/models/psi_logo/materials/textures/poster-psi-drone-logo-2percent.png',0)
+logo_temp = cv.imread('/home/gaetan/code/simulation_ws/src/my_simulations/models/psi_logo/materials/textures/poster-psi-drone-logo-5percent.png',0)
 temp_size = logo_temp.shape
 rot = 0
 
@@ -21,14 +21,14 @@ plt.imshow(logo_temp),plt.show()
 f = h5py.File('/home/gaetan/data/hdf5/psi_800res_alt_rot/data4_sync.hdf5', 'r+')
 base_items = list(f.items())
 print(base_items)
-dset = f.get('13')
+dset = f.get('6')
 imgs = np.array(dset.get('observation'))
 corn = np.array(dset.get('corners'))
 pos = np.array(dset.get('position'))
 pos_origin_cam = np.array(dset.get('pos_origin_cam'))
 print('image amount')
 print(imgs.shape)
-observed_pos = 39
+observed_pos = 49
 src = imgs[observed_pos,:,:,:]*255
 src_gray = np.uint8(cv.cvtColor(src, cv.COLOR_BGR2GRAY))
 plt.imshow(src_gray),plt.show()
@@ -54,18 +54,32 @@ src_gray_2 = cv.drawKeypoints(src_gray,kp_target,0,(255,0,0),cv.DRAW_MATCHES_FLA
 plt.imshow(src_gray_2),plt.show()
 
 # creating keypoint list and template corner list
-kp_lst = []
-for m in range(0,len(kp_target)):
-    cur_pt = kp_target[m].pt
-    int_pt = [int(cur_pt[0]),int(cur_pt[1])]
-    kp_lst.append(int_pt)
-corn_temp = [[0,0],[0,temp_size[1]],[temp_size[0],temp_size[1]],[temp_size[0],0]]
+corn_temp = [[0,0],[temp_size[1],0],[temp_size[1],temp_size[0]],[temp_size[1],0]]
 #finding the corner points
-corn_target = dw.findBB_rot(kp_lst)
+diag_temp = np.linalg.norm(np.array([temp_size[0],temp_size[1]]))
+temp_ratio = temp_size[1]/diag_temp
+Z = dm.kp_preproc(kp_target)
+# define criteria and apply kmeans()
+count = 1
+stop = False
+while stop == False:
+    criteria = (cv.TERM_CRITERIA_EPS + cv.TERM_CRITERIA_MAX_ITER, 10, 1.0)
+    ret,label,center=cv.kmeans(Z,count,None,criteria,10,cv.KMEANS_RANDOM_CENTERS)
+    # Now separate the data, Note the flatten()
+    for i in range(0,count):
+        A = Z[label.ravel()==i]
+        corn_target = dw.findBB_rot(A)
+        dst = np.linalg.norm(np.subtract(corn_target,corn_target[0]),axis = 1)
+        short_side = np.min(dst[1:3])
+        diag = np.max(dst[1:3])
+        ratio = short_side/diag
+        ratio_diff = abs(ratio-temp_ratio)
+        if  ratio_diff < 0.3:
+            stop = True
+            break
+    count += 1
+print('Corn target')
 print(corn_target)
-img_cont1 = np.copy(imgs[observed_pos,:,:,:])
-cv.drawContours(img_cont1,[corn_target],0,(255,0,0),1)
-plt.imshow(img_cont1),plt.show()
 
 #rearranging BB points in clockwise direction
 # https://pyimagesearch.com/2016/03/21/ordering-coordinates-clockwise-with-python-and-opencv/ 
@@ -102,8 +116,8 @@ corn_temp = dm.rectangle_side_fractal(corn_temp,point_amount)
 #short sides: 2**(n-1), 2*rot_step + 2**(n-1)
 pt1 = corn_temp[6]
 pt2 = corn_temp[14]
-dst1 = dm.mean_keypoint_dist(kp_temp,pt1)
-dst2 = dm.mean_keypoint_dist(kp_temp,pt2)
+dst1 = dm.mean_keypoint_dist_temp(kp_temp,pt1)
+dst2 = dm.mean_keypoint_dist_temp(kp_temp,pt2)
 dst_temp = np.array([dst1,dst2])
 print('dst_temp')
 print(dst_temp)
@@ -162,8 +176,8 @@ if pos_origin_cam[observed_pos,2] > 3:
     for k in range(0,len(pts_arr)):
         pt1 = pts_arr[k][6]
         pt2 = pts_arr[k][14]
-        dst1 = dm.mean_keypoint_dist(kp_target,pt1)
-        dst2 = dm.mean_keypoint_dist(kp_target,pt2)
+        dst1 = dm.mean_keypoint_dist_target(A,pt1)
+        dst2 = dm.mean_keypoint_dist_target(A,pt2)
         dst_target = np.array([dst1,dst2])
         print(dst_target)
         diff = np.linalg.norm(np.subtract(dst_temp,dst_target))

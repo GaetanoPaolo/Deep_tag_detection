@@ -33,7 +33,7 @@ def detect_match(K,kp_temp,des_temp,temp_shape,detector,bf,src_gray):
         pos_temp_world = dw.world_coord(np.array(pos_temp),temp_shape,0)
         dist_coeffs = np.zeros((4,1))
         if len(pos_temp) > 3 and len(pos_target) > 3:
-            (suc,rot,trans,inliers) = cv.solvePnPRansac(pos_temp_world, np.array(pos_target), K, dist_coeffs, flags=cv.SOLVEPNP_ITERATIVE, iterationsCount=2000, reprojectionError=2.0)
+            (suc,rot,trans,inliers) = cv.solvePnPRansac(pos_temp_world, np.array(pos_target), K, dist_coeffs, flags=cv.SOLVEPNP_ITERATIVE, iterationsCount=2000, reprojectionError=8.0)
             if isinstance(inliers,type(None)):
                 trans = zer_res
             elif len(inliers) < 20:
@@ -56,3 +56,42 @@ def resolution_sel(est_orb_lst,rel_pos_c):
     ext_orb_res[0:3,0] = np.squeeze(est_orb_lst[min_index],axis = 1)
     ext_orb_res[3,0] = res_list[min_index]
     return ext_orb_res
+
+def mid_pos(pt1,pt2):
+    midy = (pt1[0]+pt2[0])/2
+    midx = (pt1[1]+pt2[1])/2
+    return [midy,midx]
+
+def rectangle_side_fractal(corn_list,des_len):
+    out_lst = []
+    for i in range(0,len(corn_list)):
+        corn_list_2 = list(np.roll(np.array(corn_list),-i,axis = 0))
+        temp_out_lst = []
+        temp_out_lst.append(corn_list_2[0])
+        temp_out_lst.append(mid_pos(corn_list_2[0],corn_list_2[1]))
+        out_lst = out_lst + temp_out_lst
+    if len(out_lst) == des_len:
+        return out_lst
+    else:
+        return rectangle_side_fractal(out_lst,des_len)
+def mean_keypoint_dist_temp(kpts,pt):
+    diffs = np.zeros((len(kpts),1))
+    for m in range(0,len(kpts)):
+        cur_pt = kpts[m].pt
+        int_pt = np.array([cur_pt[0],cur_pt[1]])
+    diff = np.subtract(int_pt,np.array(pt))
+    norm = np.linalg.norm(diff)
+    diffs[m,0] = norm
+    return np.mean(diffs,axis = 0)
+def mean_keypoint_dist_target(kpts,pt):
+    diff = np.subtract(kpts,np.array(pt))
+    norm = np.linalg.norm(diff, axis=1)
+    return np.mean(diff,axis = 0)
+
+def kp_preproc(kpts):
+    Z = np.zeros((len(kpts),2))
+    for m in range(0,len(kpts)):
+        cur_pt = kpts[m].pt
+        int_pt = np.array([cur_pt[0],cur_pt[1]])
+        Z[m,:] = int_pt
+    return np.float32(Z)
