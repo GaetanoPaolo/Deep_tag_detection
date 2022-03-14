@@ -89,13 +89,14 @@ for ep in range(1,len(base_items)+1):
         rel_pos_c = pos_origin_cam[:,observed_pos]
         drone_est.append(list(rel_pos_c.astype(np.float64)))
         #computing ORB estimates for all different resolution percentages
-        if rel_pos_c[2] < 3.0:
-            est_orb_1 = det.detect_match(K,kp_temp_orb_1,des_temp_orb_1,logo_temp_1.shape,orb,bf_HAMMING,src_gray)
-            est_orb_2 = det.detect_match(K,kp_temp_orb_2,des_temp_orb_2,logo_temp_2.shape,orb,bf_HAMMING,src_gray)
-            est_orb_5 = det.detect_match(K,kp_temp_orb_5,des_temp_orb_5,logo_temp_5.shape,orb,bf_HAMMING,src_gray)
-            est_orb_10 = det.detect_match(K,kp_temp_orb_10,des_temp_orb_10,logo_temp_10.shape,orb,bf_HAMMING,src_gray)
-            est_orb_100 = det.detect_match(K,kp_temp_orb_100,des_temp_orb_100,logo_temp_100.shape,orb,bf_HAMMING,src_gray)
+        if prev_alt < 3.0:
+            inliers1,est_orb_1 = det.detect_match(K,kp_temp_orb_1,des_temp_orb_1,logo_temp_1.shape,orb,bf_HAMMING,src_gray)
+            inliers2,est_orb_2 = det.detect_match(K,kp_temp_orb_2,des_temp_orb_2,logo_temp_2.shape,orb,bf_HAMMING,src_gray)
+            inliers5,est_orb_5 = det.detect_match(K,kp_temp_orb_5,des_temp_orb_5,logo_temp_5.shape,orb,bf_HAMMING,src_gray)
+            inliers10,est_orb_10 = det.detect_match(K,kp_temp_orb_10,des_temp_orb_10,logo_temp_10.shape,orb,bf_HAMMING,src_gray)
+            inliers100,est_orb_100 = det.detect_match(K,kp_temp_orb_100,des_temp_orb_100,logo_temp_100.shape,orb,bf_HAMMING,src_gray)
             est_orb_lst = [est_orb_1,est_orb_2,est_orb_5,est_orb_10,est_orb_100]
+            inlier_lst = [inliers1,inliers2,inliers5,inliers10,inliers100]
             #computing SIFT estimate for 2 percent resolution (for scale invariance performance test)
             # est_sift_1 = det.detect_match(K,kp_temp_sift_1,des_temp_sift_1,logo_temp_1.shape,sift,bf_L2,src_gray)
             # est_sift_2 = det.detect_match(K,kp_temp_sift_2,des_temp_sift_2,logo_temp_2.shape,sift,bf_L2,src_gray)
@@ -106,7 +107,8 @@ for ep in range(1,len(base_items)+1):
             #selecting which orb estimate is closest to the altitude estimated on drone 
             #(assuming this provides a measure of the general accuracy)
             # est_sift_res = det.resolution_sel(est_sift_lst,rel_pos_c)
-            est_orb_res = det.resolution_sel(est_orb_lst,rel_pos_c)
+            #est_orb_res = det.resolution_sel(est_orb_lst,rel_pos_c)
+            est_orb_res = det.resolution_sel_inliers(est_orb_lst,inlier_lst)
         else:
             temp_size = logo_temp_2.shape
             kp_target, des_target = orb.detectAndCompute(src_gray,None)
@@ -205,13 +207,14 @@ for ep in range(1,len(base_items)+1):
                 diff = np.linalg.norm(np.subtract(dst_temp,dst_target))
                 kp_dist_diff.append(diff)
             trans = candidate_trans[kp_dist_diff.index(min(kp_dist_diff))]
-            if np.sum(trans) > 100:
+            if np.sum(rel_pos_c) > 100:
                 trans = np.zeros((3,1))
             print('Chosen rotation')
             print(pts_arr[kp_dist_diff.index(min(kp_dist_diff))])
             est_orb_res = np.append(trans,np.zeros((1,1)),axis = 0)
         #prev_alt = est_orb_res[2]
         # trans_est_sift.append(list(est_sift_res.astype(np.float64)))
+        prev_alt = est_orb_res[2]
         trans_est_orb.append(list(est_orb_res.astype(np.float64)))
         
 
@@ -220,7 +223,7 @@ hdf5_data = {"trans_est_orb": trans_est_orb,"drone_est":drone_est}
 current_dir = '/home/gaetan/data/hdf5/'
 def dump(output_dir,hdf5_data,ep):
         print('stored data in',output_dir)
-        output_hdf5_path = output_dir + '/psi_800res_alt_rot_100_rec_fit_8repr' + '.hdf5'
+        output_hdf5_path = output_dir + '/psi_800res_alt_rot_100_rec_fit_8repr_prev_inlier' + '.hdf5'
         hdf5_file = h5py.File(output_hdf5_path, "a")
         episode_group = hdf5_file.create_group(str(ep))
         for sensor_name in hdf5_data.keys():
@@ -229,4 +232,4 @@ def dump(output_dir,hdf5_data,ep):
                 sensor_name, data=np.stack(hdf5_data[sensor_name])
             )
         hdf5_file.close()
-dump(current_dir,hdf5_data,'psi_800res_alt_rot_optimal_100_rec_fit_8repr')
+dump(current_dir,hdf5_data,'psi_800res_alt_rot_optimal_100_rec_fit_8repr_prev_inlier')

@@ -24,7 +24,7 @@ print(base_items)
 dset1 = f.get('1')
 K = np.array(dset1.get('K')).reshape((3,3))
 # ILoad other parameters and images from chosen episode
-dset2 = f.get('1')
+dset2 = f.get('2')
 group_items = list(dset2.items())
 imgs = np.array(dset2.get('observation'))
 pos = np.array(dset2.get('position'))
@@ -32,7 +32,7 @@ quat = np.array(dset2.get('orientation'))
 rel_pos = np.array(dset2.get('relative_position'))
 img_stamp = np.array(dset2.get('image_time'))
 pose_stamp = np.array(dset2.get('pose_time'))
-observed_pos =295
+observed_pos =140
 src = imgs[observed_pos,:,:,:]*255
 src_gray = np.uint8(src)
 plt.imshow(imgs[observed_pos,:,:,:]),plt.show()
@@ -184,7 +184,7 @@ if rel_pos_c[2] > 3:
         ordered_pts_2 = list(np.roll(np.array(ordered_pts),-rot_step*shift,axis = 0))
         pos_temp_world = dw.world_coord(np.array(pos_temp),logo_temp,rot)
         pos_target = ordered_pts_2
-        (suc,angle,trans,inliers) = cv.solvePnPRansac(pos_temp_world, np.array(pos_target), K, dist_coeffs, flags=cv.SOLVEPNP_ITERATIVE, iterationsCount=2000, reprojectionError=2.0)
+        (suc,angle,trans,inliers) = cv.solvePnPRansac(pos_temp_world, np.array(pos_target), K, dist_coeffs, flags=cv.SOLVEPNP_ITERATIVE, iterationsCount=2000, reprojectionError=8.0)
         if inliers is not None:
             if len(inliers) >= max(inlier_arr):
                 candidate_trans.append(trans)

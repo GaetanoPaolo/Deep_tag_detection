@@ -89,7 +89,7 @@ def mean_keypoint_dist_temp(kpts,pt):
 def mean_keypoint_dist_target(kpts,pt):
     diff = np.subtract(kpts,np.array(pt))
     norm = np.linalg.norm(diff, axis=1)
-    return np.mean(diff,axis = 0)
+    return np.mean(norm,axis = 0)
 
 def kp_preproc(kpts):
     Z = np.zeros((len(kpts),2))

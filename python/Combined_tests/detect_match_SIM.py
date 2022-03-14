@@ -12,6 +12,7 @@ def detect_match(K,kp_temp,des_temp,temp_shape,detector,bf,src_gray):
                     [0.0],
                     [0.0]])
     trans = zer_res
+    inliers = []
     kp_target, des_target = detector.detectAndCompute(src_gray,None)
     try:
         matches = bf.match(des_temp, des_target)
@@ -36,11 +37,12 @@ def detect_match(K,kp_temp,des_temp,temp_shape,detector,bf,src_gray):
             (suc,rot,trans,inliers) = cv.solvePnPRansac(pos_temp_world, np.array(pos_target), K, dist_coeffs, flags=cv.SOLVEPNP_ITERATIVE, iterationsCount=2000, reprojectionError=8.0)
             if isinstance(inliers,type(None)):
                 trans = zer_res
+                inliers = []
             elif len(inliers) < 20:
                 trans = zer_res
-        return trans
+        return len(inliers), trans
     except:
-        return trans
+        return len(inliers),trans
 def resolution_sel(est_orb_lst,rel_pos_c):
     alt_diff = []
     for i in range(0,len(est_orb_lst)):
@@ -56,7 +58,13 @@ def resolution_sel(est_orb_lst,rel_pos_c):
     ext_orb_res[0:3,0] = np.squeeze(est_orb_lst[min_index],axis = 1)
     ext_orb_res[3,0] = res_list[min_index]
     return ext_orb_res
-
+def resolution_sel_inliers(est_orb_lst,inlier_lst):
+    ext_orb_res = np.zeros((4,1))
+    res_list = [1,2,5,10,100]
+    id = inlier_lst.index(max(inlier_lst))
+    ext_orb_res[0:3,0] = np.squeeze(est_orb_lst[id],axis = 1)
+    ext_orb_res[3,0] = res_list[id]
+    return ext_orb_res
 def mid_pos(pt1,pt2):
     midy = (pt1[0]+pt2[0])/2
     midx = (pt1[1]+pt2[1])/2
