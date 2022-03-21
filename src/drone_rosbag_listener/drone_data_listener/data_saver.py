@@ -38,7 +38,7 @@ class Datasaver:
                                 callback=self._pose_callback)
             rospy.Subscriber('/tf', TFMessage,callback=self._tf_callback)
             rospy.Subscriber('/tf_static', TFMessage,callback=self._tfstatic_callback)
-            self.size = {'height': 200, 'width': 200, 'depth': 3}
+            self.size = {'height': 800, 'width': 800, 'depth': 3}
         else:
             rospy.Subscriber('/camera/fisheye1/image_raw',
                                 Image,
@@ -185,7 +185,7 @@ class Datasaver:
 print(__name__)
 if __name__ == '__main__':
     print('protocol started')
-    output_directory = '/home/gaetan/data/hdf5/coca_cola_200res_alt_rot'
+    output_directory = '/home/gaetan/data/hdf5/psi_800res_alt_rot_concrete_fine'
     data_saver = Datasaver(output_dir=output_directory)
     print('Datasaver_created')
     data_saver.run()

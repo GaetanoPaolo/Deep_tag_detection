@@ -11,7 +11,7 @@
     <arg name="gazebo" default="false"/>
     <group if="$(arg gazebo)">
         <include file="$(find gazebo_ros)/launch/empty_world.launch">
-            <arg name="world_name" value="$(find my_simulations)/worlds/logo_world.world"/>
+            <arg name="world_name" value="$(find my_simulations)/worlds/logo_world_apriltag.world"/>
             <arg name="paused" default="$(arg paused)"/>
             <arg name="gui" value="true"/>
             <arg name="headless" default="true"/>

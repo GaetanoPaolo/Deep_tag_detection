@@ -9,7 +9,7 @@ import det_logo_image
 
 # load all the necessary data from the hdf5 file
 #f = h5py.File('/home/gaetan/data/hdf5/test_sim_flight/data3.hdf5', 'r')
-current_dir = '/home/gaetan/data/hdf5/coca_cola_200res_alt_rot/'
+current_dir = '/home/gaetan/data/hdf5/psi_800res_alt_rot_concrete_fine/'
 print(current_dir)
 f = h5py.File(current_dir+'data4.hdf5', 'r')
 base_items = list(f.items())

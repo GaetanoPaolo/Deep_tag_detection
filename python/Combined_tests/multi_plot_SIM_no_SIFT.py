@@ -2,13 +2,16 @@ from matplotlib import pyplot as plt
 import cv2 as cv
 import numpy as np
 import h5py
-f = h5py.File('/home/gaetan/data/hdf5/psi_800res_alt_rot_100_rec_fit_8repr_prev_inlier.hdf5', 'r+')
+f = h5py.File('/home/gaetan/data/hdf5/psi_800res_alt_rot_100_DBSCAN_epsfunc_qr.hdf5', 'r+')
+plot_path = '/home/gaetan/code/simulation_ws/python/Combined_tests/Plots/SIM/psi_800res_alt_rot/100perc_alt_fit_8repr_qr/2000kp_max/'
+save_plot = False
 base_items = list(f.items())
 print(base_items)
 dset2 = f.get(base_items[0][0])
 trans_est_orb = np.array(dset2.get('trans_est_orb'))
 drone_est = np.array(dset2.get('drone_est'))
-
+print(trans_est_orb.shape)
+print(drone_est.shape)
 #computing errors
 orb_err = abs(np.subtract(drone_est,np.squeeze(trans_est_orb[:,0:3,:],axis = 2)))
 
@@ -40,7 +43,7 @@ for j in range(0,orb_err.shape[0]):
 #setting the upper error bound that will be plotted
 upper = 6
 #setting up the begin timestamp of the simulation
-begin = 150+38
+begin = 170
 size = drone_est.shape
 end = size[0]
 #plot each axis along altitude
@@ -49,6 +52,7 @@ fig, axd = plt.subplot_mosaic([#['zero'],
                                ['second'],
                                ['third'],
                                ['fourth']], layout='constrained')
+
 #l0, = axd['zero'].plot(drone_est[:,2],'.')
 #axd['zero'].set_title('SIFT best resolution percentage')
 l1, = axd['first'].plot(drone_est[begin:end,2],trans_est_orb[begin:end,3],'.')
@@ -66,6 +70,10 @@ l10, = axd['fourth'].plot(drone_est[begin:end,2],orb_true_err[begin:end,2], '.',
 axd['fourth'].legend([l10],['ORB','SIFT'])
 axd['fourth'].set_ylim([0,2])
 fig.suptitle('Estimation error for ORB and SIFT: ORB_create(2000,1.1,8,21,0,2,0,21,20)',fontsize=16)
+mng = plt.get_current_fig_manager()
+mng.window.showMaximized()
+if save_plot:
+    plt.savefig(plot_path + 'alt.png')
 plt.show()
 
 
@@ -90,7 +98,10 @@ axd['fourth'].legend([l6],['ORB'])
 axd['fourth'].set_ylim([0,2])
 #plt.ylim([0,20])
 fig.suptitle('Estimation error for ORB and SIFT: ORB_create(2000,1.1,8,21,0,2,0,21,20)',fontsize=16)
+if save_plot:
+    plt.savefig(plot_path + 'time.png')
 plt.show()
+
 
 #plot the estimated and true values for each axis
 fig, axd = plt.subplot_mosaic([#['first'],
@@ -118,7 +129,10 @@ axd['fourth'].legend([l8,l10],['ORB','GT'])
 axd['fourth'].set_ylim([0,10])
 #axd['fourth'].set_xlim([400,600])
 fig.suptitle('Estimation position for ORB and SIFT: ORB_create(2000,1.1,8,21,0,2,0,21,20)',fontsize=16)
+if save_plot:
+    plt.savefig(plot_path + 'time_pos.png')
 plt.show()
+
 #calculating mean error for each component
 orb_pruned = np.delete(orb_true_err,del_orb,axis = 0)
 #plot the percentages of valid and invalid samples
@@ -132,6 +146,8 @@ ax1.pie(sizes, explode=explode, labels=labels, autopct='%1.1f%%',
         shadow=True, startangle=90)
 ax1.axis('equal')  # Equal aspect ratio ensures that pie is drawn as a circle.
 ax1.set_title('Ratios of valid and invalid samples (due to inlier threshold = 20)')
+if save_plot:
+    plt.savefig(plot_path + 'pie_valid.png')
 plt.show()
 
 # mae_orb = np.mean(orb_pruned, axis = 0)
@@ -209,6 +225,8 @@ plt.ylabel("%")
 plt.yticks([])
 plt.xticks([])
 plt.title('Relative amounts of samples for each error range (excluding invalids)')
+if save_plot:
+    plt.savefig(plot_path + 'err_no_invalid.png')
 plt.show()
 
 # Bar chart including invalids
@@ -277,5 +295,7 @@ plt.ylabel("%")
 plt.yticks([])
 plt.xticks([])
 plt.title('Relative amounts of samples for each error range (including invalids)')
+if save_plot:
+    plt.savefig(plot_path + 'err_invalid.png')
 plt.show()
 

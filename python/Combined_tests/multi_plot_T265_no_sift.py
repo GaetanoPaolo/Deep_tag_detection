@@ -2,7 +2,7 @@ from matplotlib import pyplot as plt
 import cv2 as cv
 import numpy as np
 import h5py
-f = h5py.File('/home/gaetan/data/hdf5/T265_alt_fit.hdf5', 'r+')
+f = h5py.File('/home/gaetan/data/hdf5/T265_alt_DBSCAN_8repr.hdf5', 'r+')
 base_items = list(f.items())
 dset2 = f.get(base_items[0][0])
 trans_est_orb = np.array(dset2.get('trans_est_orb'))

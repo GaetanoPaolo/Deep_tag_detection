@@ -15,8 +15,6 @@ logo_temp = cv.imread('/home/gaetan/code/simulation_ws/src/my_simulations/models
 temp_size = logo_temp.shape
 rot = 0
 
-#removing the blue edge of the logo template to detect logo itself
-#logo_temp = crop.crop_img(logo_temp,2)
 plt.imshow(logo_temp),plt.show()
 # load the labelled gazebo data
 f = h5py.File('/home/gaetan/data/hdf5/coca_cola_800res_alt_rot/data4_sync.hdf5', 'r+')

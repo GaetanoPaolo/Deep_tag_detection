@@ -3,9 +3,9 @@ import numpy as np
 #by detecting the presence of  non - green pixels
 def logo_image(SIM,img):
     if SIM:
-        R_slice = img[:,:,0]
+        R_slice = np.sum(img[:,:,:], axis = 2)
         size = R_slice.shape
-        template = np.ones((size[0],size[1]))*0.00392
+        template = np.ones((size[0],size[1]))*2.1058824
         diff = R_slice - template
         #print(np.sum(np.sum(diff,0),0))
         if np.sum(np.sum(diff,0),0) < 0.1:

@@ -16,7 +16,7 @@ rot = 0
 #logo_temp = crop.crop_img(logo_temp,2)
 plt.imshow(logo_temp),plt.show()
 # load the labelled gazebo data
-f = h5py.File('/home/gaetan/data/hdf5/coca_cola_test/data4_sync.hdf5', 'r+')
+f = h5py.File('/home/gaetan/data/hdf5/coca_cola_800res_alt_rot/data4_sync.hdf5', 'r+')
 base_items = list(f.items())
 print(f.items)
 dset = f.get('10')

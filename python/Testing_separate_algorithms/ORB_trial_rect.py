@@ -81,6 +81,11 @@ while stop == False:
 print('Corn target')
 print(corn_target)
 
+#plotting the obtained bounding box points
+img_cont1 = np.copy(src_gray)
+cv.drawContours(img_cont1,[corn_target],0,(255,0,0),1)
+plt.imshow(img_cont1),plt.show()
+
 #rearranging BB points in clockwise direction
 # https://pyimagesearch.com/2016/03/21/ordering-coordinates-clockwise-with-python-and-opencv/ 
 ordered_pts = np.zeros((4,2))
