@@ -2,11 +2,12 @@ from matplotlib import pyplot as plt
 import cv2 as cv
 import numpy as np
 import h5py
-f = h5py.File('/home/gaetan/data/hdf5/T265_alt_DBSCAN_8repr_clust_solve.hdf5', 'r+')
+f = h5py.File('/home/gaetan/data/hdf5/T265_alt_DBSCAN_8repr_clust_solve_timing_detect_hom_alt_debug_4inlier.hdf5', 'r+')
 base_items = list(f.items())
 dset2 = f.get(base_items[0][0])
 trans_est_orb = np.array(dset2.get('trans_est_orb'))
 drone_est = np.array(dset2.get('drone_est'))
+tot_timing = np.array(dset2.get('timing'))
 
 #computing errors
 #orb_err = np.squeeze(abs(np.subtract(np.squeeze(drone_est, axis = 3),trans_est_orb[:,0:3])),axis = 2)
@@ -47,7 +48,7 @@ fig, axd = plt.subplot_mosaic([#['zero'],
                                 ['first'],
                                ['second'],
                                ['third'],
-                               ['fourth']], layout='constrained')
+                               ['fourth']])
 #l0, = axd['zero'].plot(drone_est[:,2],'.')
 #axd['zero'].set_title('SIFT best resolution percentage')
 l1, = axd['first'].plot(drone_est[begin:end,2],trans_est_orb[begin:end,3],'.')
@@ -72,7 +73,7 @@ plt.show()
 fig, axd = plt.subplot_mosaic([#['first'],
                                ['second'],
                                ['third'],
-                               ['fourth']], layout='constrained')
+                               ['fourth']])
 # l1, = axd['first'].plot(range(0,size[0]),trans_est_orb[:,3],'.')
 # axd['first'].set_title('ORB best resolution percentage')
 axd['second'].set_title('Errors x-axis over timesamples')
@@ -92,12 +93,13 @@ fig.suptitle('Estimation error for ORB and SIFT: ORB_create(2000,1.1,8,21,0,2,0,
 plt.show()
 
 #plot the estimated and true values for each axis
-fig, axd = plt.subplot_mosaic([#['first'],
+fig, axd = plt.subplot_mosaic([['first'],
                                ['second'],
                                ['third'],
-                               ['fourth']], layout='constrained')
-# l1, = axd['first'].plot(range(0,size[0]),trans_est_orb[:,3],'.')
-# axd['first'].set_title('ORB best resolution percentage')
+                               ['fourth']])
+l1, = axd['first'].plot(range(begin,size[0]),tot_timing[begin:end],'.')
+axd['first'].set_ylim([0,0.5])
+axd['first'].set_title('Algorithm timing')
 axd['second'].set_title('x-axis tag pos relative to camera over timesamples')
 l2, = axd['second'].plot(range(begin,size[0]),trans_est_orb[begin:end,0],'.',label = 'ORB')
 l4, = axd['second'].plot(range(begin,size[0]),drone_est[begin:end,0],label = 'GT')
@@ -115,6 +117,39 @@ l8, = axd['fourth'].plot(range(begin,size[0]),trans_est_orb[begin:end,2],'.',lab
 l10, = axd['fourth'].plot(range(begin,size[0]),drone_est[begin:end,2],label = 'GT')
 axd['fourth'].legend([l8,l10],['ORB','GT'])
 axd['fourth'].set_ylim([0,10])
+#axd['fourth'].set_xlim([400,600])
+fig.suptitle('Estimation position for ORB and SIFT: ORB_create(2000,1.1,8,21,0,2,0,21,20)',fontsize=16)
+plt.show()
+
+#plot the estimated and true values for each axis zoom
+fig, axd = plt.subplot_mosaic([['first'],
+                               ['second'],
+                               ['third'],
+                               ['fourth']])
+l1, = axd['first'].plot(range(begin,size[0]),tot_timing[begin:end],'.')
+axd['first'].set_ylim([0,0.5])
+axd['first'].set_xlim([100,200])
+axd['first'].set_title('Algorithm timing')
+axd['second'].set_title('x-axis tag pos relative to camera over timesamples')
+l2, = axd['second'].plot(range(begin,size[0]),trans_est_orb[begin:end,0],'.',label = 'ORB')
+l4, = axd['second'].plot(range(begin,size[0]),drone_est[begin:end,0],label = 'GT')
+axd['second'].set_ylim([-1,1])
+axd['second'].set_xlim([100,200])
+#axd['second'].set_xlim([400,600])
+axd['second'].legend([l2,l4],['ORB','GT'])
+axd['third'].set_title('Errors y-axis over timesamples')
+l5,= axd['third'].plot(range(begin,size[0]),trans_est_orb[begin:end,1],'.',label = 'ORB')
+l7, = axd['third'].plot(range(begin,size[0]),drone_est[begin:end,1],label = 'GT')
+axd['third'].legend([l5,l7],['ORB','GT'])
+axd['third'].set_ylim([-1,1])
+axd['third'].set_xlim([100,200])
+#axd['third'].set_xlim([400,600])
+axd['fourth'].set_title('Errors z-axis over timesamples')
+l8, = axd['fourth'].plot(range(begin,size[0]),trans_est_orb[begin:end,2],'.',label = 'ORB')
+l10, = axd['fourth'].plot(range(begin,size[0]),drone_est[begin:end,2],label = 'GT')
+axd['fourth'].legend([l8,l10],['ORB','GT'])
+axd['fourth'].set_ylim([0,2])
+axd['fourth'].set_xlim([100,200])
 #axd['fourth'].set_xlim([400,600])
 fig.suptitle('Estimation position for ORB and SIFT: ORB_create(2000,1.1,8,21,0,2,0,21,20)',fontsize=16)
 plt.show()

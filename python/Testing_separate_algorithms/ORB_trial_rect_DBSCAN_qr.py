@@ -22,17 +22,17 @@ rot = 0
 #logo_temp = crop.crop_img(logo_temp,2)
 plt.imshow(logo_temp),plt.show()
 # load the labelled gazebo data
-f = h5py.File('/home/gaetan/data/hdf5/psi_800res_alt_rot_qr/data4_sync.hdf5', 'r+')
+f = h5py.File('/home/gaetan/data/hdf5/psi_800res_alt_rot/data4_sync.hdf5', 'r+')
 base_items = list(f.items())
 print(base_items)
-dset = f.get('15')
+dset = f.get('8')
 imgs = np.array(dset.get('observation'))
 corn = np.array(dset.get('corners'))
 pos = np.array(dset.get('position'))
 pos_origin_cam = np.array(dset.get('pos_origin_cam'))
 print('image amount')
 print(imgs.shape)
-observed_pos = 0
+observed_pos = 40
 src = imgs[observed_pos,:,:,:]*255
 src_gray = np.uint8(cv.cvtColor(src, cv.COLOR_BGR2GRAY))
 plt.imshow(src_gray),plt.show()
@@ -145,7 +145,7 @@ if len(matches) >= 2 and pos_origin_cam[observed_pos,2] > 3:
     print('kp before clustering')
     print(Z.shape)
     # apply DBSCAN
-    db = DBSCAN(eps=dist_param +10, min_samples=5).fit(Z)
+    db = DBSCAN(eps=30.0, min_samples=5).fit(Z)
     core_samples_mask = np.zeros_like(db.labels_, dtype=bool)
     core_samples_mask[db.core_sample_indices_] = True
     labels = db.labels_
@@ -212,7 +212,7 @@ if len(matches) >= 2 and pos_origin_cam[observed_pos,2] > 3:
 
     # #plotting the obtained bounding box points
     img_cont1 = np.copy(src_gray)
-    cv.drawContours(img_cont1,[corn_target],0,(255,0,0),1)
+    cv.drawContours(img_cont1,[corn_target],0,(0,0,255),1)
     plt.imshow(img_cont1),plt.show()
     #rearranging BB points in clockwise direction
     # https://pyimagesearch.com/2016/03/21/ordering-coordinates-clockwise-with-python-and-opencv/ 

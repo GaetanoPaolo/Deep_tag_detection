@@ -1,0 +1,76 @@
+Fri Mar 25 17:23:33 2022    naive_pose_est_below_3m.dat
+
+         1407 function calls in 0.296 seconds
+
+   Ordered by: internal time
+
+   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+        4    0.235    0.059    0.235    0.059 {solvePnPRansac}
+        4    0.051    0.013    0.051    0.013 {method 'detectAndCompute' of 'cv2.Feature2D' objects}
+        4    0.008    0.002    0.008    0.002 {method 'match' of 'cv2.DescriptorMatcher' objects}
+        4    0.001    0.000    0.001    0.000 /home/gaetan/code/simulation_ws/python/Combined_tests/draw_transf.py:45(world_coord)
+      204    0.001    0.000    0.001    0.000 {built-in method numpy.array}
+        4    0.000    0.000    0.295    0.074 /home/gaetan/code/simulation_ws/python/Combined_tests/detect_match.py:10(detect_match)
+        1    0.000    0.000    0.296    0.296 {built-in method builtins.exec}
+      924    0.000    0.000    0.000    0.000 {method 'append' of 'list' objects}
+        1    0.000    0.000    0.296    0.296 /home/gaetan/code/simulation_ws/python/Combined_tests/multi_eval_T265_total_DBSCAN_cProfile.py:53(pose_est)
+        4    0.000    0.000    0.000    0.000 {built-in method builtins.sorted}
+        1    0.000    0.000    0.000    0.000 /home/gaetan/code/simulation_ws/python/Combined_tests/detect_match.py:46(resolution_sel)
+        5    0.000    0.000    0.000    0.000 /home/gaetan/miniconda3/lib/python3.9/site-packages/numpy/matrixlib/defmatrix.py:189(__getitem__)
+      184    0.000    0.000    0.000    0.000 /home/gaetan/code/simulation_ws/python/Combined_tests/detect_match.py:19(<lambda>)
+        8    0.000    0.000    0.000    0.000 {built-in method builtins.max}
+        5    0.000    0.000    0.000    0.000 {built-in method numpy.zeros}
+       11    0.000    0.000    0.000    0.000 {built-in method builtins.isinstance}
+        9    0.000    0.000    0.000    0.000 {built-in method builtins.min}
+        8    0.000    0.000    0.000    0.000 {built-in method builtins.round}
+        1    0.000    0.000    0.000    0.000 <__array_function__ internals>:2(squeeze)
+        1    0.000    0.000    0.296    0.296 <string>:1(<module>)
+        7    0.000    0.000    0.000    0.000 {built-in method builtins.len}
+        3    0.000    0.000    0.000    0.000 /home/gaetan/miniconda3/lib/python3.9/site-packages/numpy/matrixlib/defmatrix.py:167(__array_finalize__)
+        1    0.000    0.000    0.000    0.000 /home/gaetan/miniconda3/lib/python3.9/site-packages/numpy/core/fromnumeric.py:1441(squeeze)
+        1    0.000    0.000    0.000    0.000 {method 'squeeze' of 'numpy.ndarray' objects}
+        1    0.000    0.000    0.000    0.000 {built-in method numpy.core._multiarray_umath.implement_array_function}
+        4    0.000    0.000    0.000    0.000 {built-in method builtins.abs}
+        1    0.000    0.000    0.000    0.000 {method 'disable' of '_lsprof.Profiler' objects}
+        1    0.000    0.000    0.000    0.000 {method 'index' of 'list' objects}
+        1    0.000    0.000    0.000    0.000 /home/gaetan/miniconda3/lib/python3.9/site-packages/numpy/core/fromnumeric.py:1437(_squeeze_dispatcher)
+
+
+Fri Mar 25 17:23:33 2022    naive_pose_est_below_3m.dat
+
+         1407 function calls in 0.296 seconds
+
+   Ordered by: call count
+
+   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+      924    0.000    0.000    0.000    0.000 {method 'append' of 'list' objects}
+      204    0.001    0.000    0.001    0.000 {built-in method numpy.array}
+      184    0.000    0.000    0.000    0.000 /home/gaetan/code/simulation_ws/python/Combined_tests/detect_match.py:19(<lambda>)
+       11    0.000    0.000    0.000    0.000 {built-in method builtins.isinstance}
+        9    0.000    0.000    0.000    0.000 {built-in method builtins.min}
+        8    0.000    0.000    0.000    0.000 {built-in method builtins.max}
+        8    0.000    0.000    0.000    0.000 {built-in method builtins.round}
+        7    0.000    0.000    0.000    0.000 {built-in method builtins.len}
+        5    0.000    0.000    0.000    0.000 {built-in method numpy.zeros}
+        5    0.000    0.000    0.000    0.000 /home/gaetan/miniconda3/lib/python3.9/site-packages/numpy/matrixlib/defmatrix.py:189(__getitem__)
+        4    0.000    0.000    0.000    0.000 {built-in method builtins.abs}
+        4    0.000    0.000    0.000    0.000 {built-in method builtins.sorted}
+        4    0.000    0.000    0.295    0.074 /home/gaetan/code/simulation_ws/python/Combined_tests/detect_match.py:10(detect_match)
+        4    0.001    0.000    0.001    0.000 /home/gaetan/code/simulation_ws/python/Combined_tests/draw_transf.py:45(world_coord)
+        4    0.235    0.059    0.235    0.059 {solvePnPRansac}
+        4    0.051    0.013    0.051    0.013 {method 'detectAndCompute' of 'cv2.Feature2D' objects}
+        4    0.008    0.002    0.008    0.002 {method 'match' of 'cv2.DescriptorMatcher' objects}
+        3    0.000    0.000    0.000    0.000 /home/gaetan/miniconda3/lib/python3.9/site-packages/numpy/matrixlib/defmatrix.py:167(__array_finalize__)
+        1    0.000    0.000    0.296    0.296 {built-in method builtins.exec}
+        1    0.000    0.000    0.000    0.000 {method 'index' of 'list' objects}
+        1    0.000    0.000    0.296    0.296 <string>:1(<module>)
+        1    0.000    0.000    0.000    0.000 {method 'disable' of '_lsprof.Profiler' objects}
+        1    0.000    0.000    0.000    0.000 /home/gaetan/code/simulation_ws/python/Combined_tests/detect_match.py:46(resolution_sel)
+        1    0.000    0.000    0.000    0.000 <__array_function__ internals>:2(squeeze)
+        1    0.000    0.000    0.000    0.000 /home/gaetan/miniconda3/lib/python3.9/site-packages/numpy/core/fromnumeric.py:1437(_squeeze_dispatcher)
+        1    0.000    0.000    0.000    0.000 /home/gaetan/miniconda3/lib/python3.9/site-packages/numpy/core/fromnumeric.py:1441(squeeze)
+        1    0.000    0.000    0.000    0.000 {method 'squeeze' of 'numpy.ndarray' objects}
+        1    0.000    0.000    0.000    0.000 {built-in method numpy.core._multiarray_umath.implement_array_function}
+        1    0.000    0.000    0.296    0.296 /home/gaetan/code/simulation_ws/python/Combined_tests/multi_eval_T265_total_DBSCAN_cProfile.py:53(pose_est)
+
+

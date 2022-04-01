@@ -1,0 +1,98 @@
+Mon Mar 28 21:26:29 2022    detect_parallel_hom_pose_est_below_3m_191.dat
+
+         550 function calls (549 primitive calls) in 0.229 seconds
+
+   Ordered by: internal time
+
+   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+        4    0.120    0.030    0.120    0.030 {findHomography}
+        1    0.051    0.051    0.051    0.051 {solvePnP}
+        4    0.048    0.012    0.048    0.012 {method 'match' of 'cv2.DescriptorMatcher' objects}
+        1    0.008    0.008    0.008    0.008 {method 'detectAndCompute' of 'cv2.Feature2D' objects}
+        4    0.001    0.000    0.169    0.042 /home/gaetan/code/simulation_ws/python/Combined_tests/detect_match_opt_cuda.py:10(detect_match)
+        4    0.000    0.000    0.000    0.000 {method 'reduce' of 'numpy.ufunc' objects}
+        1    0.000    0.000    0.229    0.229 multi_eval_T265_total_DBSCAN_cProfile_detect_hom.py:55(pose_est)
+        4    0.000    0.000    0.000    0.000 {built-in method builtins.sorted}
+        1    0.000    0.000    0.229    0.229 {built-in method builtins.exec}
+      352    0.000    0.000    0.000    0.000 {method 'append' of 'list' objects}
+       18    0.000    0.000    0.000    0.000 {built-in method numpy.array}
+       79    0.000    0.000    0.000    0.000 /home/gaetan/code/simulation_ws/python/Combined_tests/detect_match_opt_cuda.py:16(<lambda>)
+        4    0.000    0.000    0.000    0.000 /home/gaetan/.local/lib/python3.6/site-packages/numpy/core/fromnumeric.py:70(_wrapreduction)
+        1    0.000    0.000    0.000    0.000 /home/gaetan/code/simulation_ws/python/Combined_tests/draw_transf.py:45(world_coord)
+      6/5    0.000    0.000    0.000    0.000 {built-in method numpy.core._multiarray_umath.implement_array_function}
+        8    0.000    0.000    0.000    0.000 {method 'reshape' of 'numpy.ndarray' objects}
+        4    0.000    0.000    0.000    0.000 /home/gaetan/.local/lib/python3.6/site-packages/numpy/core/fromnumeric.py:2105(sum)
+        4    0.000    0.000    0.000    0.000 <__array_function__ internals>:2(sum)
+        1    0.000    0.000    0.000    0.000 {built-in method builtins.sum}
+        1    0.000    0.000    0.229    0.229 <string>:1(<module>)
+        1    0.000    0.000    0.000    0.000 /home/gaetan/.local/lib/python3.6/site-packages/numpy/matrixlib/defmatrix.py:189(__getitem__)
+        8    0.000    0.000    0.000    0.000 {built-in method builtins.isinstance}
+        3    0.000    0.000    0.000    0.000 {built-in method builtins.max}
+        1    0.000    0.000    0.000    0.000 <__array_function__ internals>:2(append)
+        4    0.000    0.000    0.000    0.000 /home/gaetan/.local/lib/python3.6/site-packages/numpy/core/fromnumeric.py:71(<dictcomp>)
+        2    0.000    0.000    0.000    0.000 {built-in method numpy.zeros}
+        6    0.000    0.000    0.000    0.000 {built-in method builtins.len}
+        1    0.000    0.000    0.000    0.000 {method 'index' of 'list' objects}
+        3    0.000    0.000    0.000    0.000 /home/gaetan/.local/lib/python3.6/site-packages/numpy/matrixlib/defmatrix.py:167(__array_finalize__)
+        4    0.000    0.000    0.000    0.000 {method 'items' of 'dict' objects}
+        4    0.000    0.000    0.000    0.000 /home/gaetan/.local/lib/python3.6/site-packages/numpy/core/fromnumeric.py:2100(_sum_dispatcher)
+        1    0.000    0.000    0.000    0.000 {built-in method builtins.getattr}
+        2    0.000    0.000    0.000    0.000 {built-in method builtins.round}
+        1    0.000    0.000    0.000    0.000 /home/gaetan/.local/lib/python3.6/site-packages/numpy/lib/function_base.py:4616(append)
+        1    0.000    0.000    0.000    0.000 <__array_function__ internals>:2(concatenate)
+        1    0.000    0.000    0.000    0.000 /home/gaetan/.local/lib/python3.6/site-packages/numpy/lib/function_base.py:4612(_append_dispatcher)
+        1    0.000    0.000    0.000    0.000 /home/gaetan/.local/lib/python3.6/site-packages/numpy/core/_asarray.py:86(asanyarray)
+        1    0.000    0.000    0.000    0.000 /home/gaetan/.local/lib/python3.6/site-packages/numpy/core/multiarray.py:143(concatenate)
+        2    0.000    0.000    0.000    0.000 {built-in method builtins.min}
+        1    0.000    0.000    0.000    0.000 {method 'disable' of '_lsprof.Profiler' objects}
+
+
+Mon Mar 28 21:26:29 2022    detect_parallel_hom_pose_est_below_3m_191.dat
+
+         550 function calls (549 primitive calls) in 0.229 seconds
+
+   Ordered by: call count
+
+   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+      352    0.000    0.000    0.000    0.000 {method 'append' of 'list' objects}
+       79    0.000    0.000    0.000    0.000 /home/gaetan/code/simulation_ws/python/Combined_tests/detect_match_opt_cuda.py:16(<lambda>)
+       18    0.000    0.000    0.000    0.000 {built-in method numpy.array}
+        8    0.000    0.000    0.000    0.000 {built-in method builtins.isinstance}
+        8    0.000    0.000    0.000    0.000 {method 'reshape' of 'numpy.ndarray' objects}
+        6    0.000    0.000    0.000    0.000 {built-in method builtins.len}
+      6/5    0.000    0.000    0.000    0.000 {built-in method numpy.core._multiarray_umath.implement_array_function}
+        4    0.000    0.000    0.000    0.000 {built-in method builtins.sorted}
+        4    0.000    0.000    0.000    0.000 {method 'items' of 'dict' objects}
+        4    0.001    0.000    0.169    0.042 /home/gaetan/code/simulation_ws/python/Combined_tests/detect_match_opt_cuda.py:10(detect_match)
+        4    0.120    0.030    0.120    0.030 {findHomography}
+        4    0.048    0.012    0.048    0.012 {method 'match' of 'cv2.DescriptorMatcher' objects}
+        4    0.000    0.000    0.000    0.000 /home/gaetan/.local/lib/python3.6/site-packages/numpy/core/fromnumeric.py:71(<dictcomp>)
+        4    0.000    0.000    0.000    0.000 /home/gaetan/.local/lib/python3.6/site-packages/numpy/core/fromnumeric.py:70(_wrapreduction)
+        4    0.000    0.000    0.000    0.000 /home/gaetan/.local/lib/python3.6/site-packages/numpy/core/fromnumeric.py:2100(_sum_dispatcher)
+        4    0.000    0.000    0.000    0.000 /home/gaetan/.local/lib/python3.6/site-packages/numpy/core/fromnumeric.py:2105(sum)
+        4    0.000    0.000    0.000    0.000 <__array_function__ internals>:2(sum)
+        4    0.000    0.000    0.000    0.000 {method 'reduce' of 'numpy.ufunc' objects}
+        3    0.000    0.000    0.000    0.000 {built-in method builtins.max}
+        3    0.000    0.000    0.000    0.000 /home/gaetan/.local/lib/python3.6/site-packages/numpy/matrixlib/defmatrix.py:167(__array_finalize__)
+        2    0.000    0.000    0.000    0.000 {built-in method builtins.min}
+        2    0.000    0.000    0.000    0.000 {built-in method builtins.round}
+        2    0.000    0.000    0.000    0.000 {built-in method numpy.zeros}
+        1    0.000    0.000    0.229    0.229 {built-in method builtins.exec}
+        1    0.000    0.000    0.000    0.000 {built-in method builtins.getattr}
+        1    0.000    0.000    0.000    0.000 {built-in method builtins.sum}
+        1    0.000    0.000    0.000    0.000 {method 'index' of 'list' objects}
+        1    0.000    0.000    0.229    0.229 <string>:1(<module>)
+        1    0.000    0.000    0.000    0.000 /home/gaetan/code/simulation_ws/python/Combined_tests/draw_transf.py:45(world_coord)
+        1    0.051    0.051    0.051    0.051 {solvePnP}
+        1    0.008    0.008    0.008    0.008 {method 'detectAndCompute' of 'cv2.Feature2D' objects}
+        1    0.000    0.000    0.000    0.000 /home/gaetan/.local/lib/python3.6/site-packages/numpy/lib/function_base.py:4612(_append_dispatcher)
+        1    0.000    0.000    0.000    0.000 /home/gaetan/.local/lib/python3.6/site-packages/numpy/lib/function_base.py:4616(append)
+        1    0.000    0.000    0.000    0.000 <__array_function__ internals>:2(append)
+        1    0.000    0.000    0.000    0.000 /home/gaetan/.local/lib/python3.6/site-packages/numpy/matrixlib/defmatrix.py:189(__getitem__)
+        1    0.000    0.000    0.000    0.000 /home/gaetan/.local/lib/python3.6/site-packages/numpy/core/_asarray.py:86(asanyarray)
+        1    0.000    0.000    0.000    0.000 {method 'disable' of '_lsprof.Profiler' objects}
+        1    0.000    0.000    0.000    0.000 /home/gaetan/.local/lib/python3.6/site-packages/numpy/core/multiarray.py:143(concatenate)
+        1    0.000    0.000    0.000    0.000 <__array_function__ internals>:2(concatenate)
+        1    0.000    0.000    0.229    0.229 multi_eval_T265_total_DBSCAN_cProfile_detect_hom.py:55(pose_est)
+
+

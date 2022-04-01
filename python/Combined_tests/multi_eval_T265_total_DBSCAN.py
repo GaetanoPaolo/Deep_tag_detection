@@ -135,22 +135,7 @@ for ep in range(1,3):
                     match_target.append(kp_target[target_pt_idx])
                     pos_temp.append(temp_coord)
                     pos_target.append(target_coord)
-                pos_temp_world = dw.world_coord(np.array(pos_temp),logo_temp_2.shape,rot)
-                dist_coeffs = np.zeros((4,1))
-                (suc,angle,trans,inliers) = cv.solvePnPRansac(pos_temp_world, np.array(pos_target), K, dist_coeffs, flags=cv.SOLVEPNP_ITERATIVE, iterationsCount=2000, reprojectionError=2.0)
-                if isinstance(inliers,type(None)):
-                    print(inliers)
-                else:
-                    print(len(inliers))
-                    inlier_matches = []
-                    inlier_kp_target = []
-                    for k in range(0,len(inliers)):
-                        inlier_matches.append(matches[inliers[k][0]])
-                        cur_inlier_idx = matches[inliers[k][0]].trainIdx
-                        cur_inlier_kp = kp_target[cur_inlier_idx].pt
-                        int_cur_inlier_kp = [int(cur_inlier_kp[0]),int(cur_inlier_kp[1])]
-                        inlier_kp_target.append(int_cur_inlier_kp)
-            
+  
                 inlier_kp_target = pos_target
                 #if less than 20 and at least two inliers: activation of the clustering algorithm to add edge matches
                 #if not isinstance(inliers,type(None)):
@@ -309,7 +294,7 @@ hdf5_data = {"trans_est_orb": trans_est_orb,"drone_est":drone_est}
 current_dir = '/home/gaetan/data/hdf5/'
 def dump(output_dir,hdf5_data,ep):
         print('stored data in',output_dir)
-        output_hdf5_path = output_dir + '/T265_alt_DBSCAN_8repr' + '.hdf5'
+        output_hdf5_path = output_dir + '/T265_alt_DBSCAN_8repr_clust_solve' + '.hdf5'
         hdf5_file = h5py.File(output_hdf5_path, "a")
         episode_group = hdf5_file.create_group(str(ep))
         for sensor_name in hdf5_data.keys():
@@ -317,5 +302,5 @@ def dump(output_dir,hdf5_data,ep):
                 sensor_name, data=np.stack(hdf5_data[sensor_name])
             )
         hdf5_file.close()
-dump(current_dir,hdf5_data,'T265_alt_DBSCAN_8repr')
+dump(current_dir,hdf5_data,'T265_alt_DBSCAN_8repr_clust_solve')
 

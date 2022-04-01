@@ -82,4 +82,24 @@ def world_coord(pts,size,rot):
             rel_pos_px = pt_origin - np.array([-pts[i,0],pts[i,1]])
             rel_pos_3d = (rel_pos_px[0]*vert_ratio,rel_pos_px[1]*horiz_ratio,0.001)
             world_pts.append(rel_pos_3d)
-    return np.array(world_pts)
+    return np.array(world_pts),world_pts
+def world_coord_tup(pts,size):
+    #size = pixel dimensions of the template
+    dim = pts.shape
+    world_arr = np.zeros((dim[0],3))
+    # vert_ratio = 0.985/max(size)
+    # horiz_ratio = 0.68/min(size)
+    vert_ratio = 1.05/max(size)
+    horiz_ratio = 0.75/min(size)
+    #inverting order of position indices due to the x direction being along the long side
+    #and y being along the short side in gazebo
+    x_origin = round(min(size)/2)
+    #y_origin = round(max(size)/2)
+    y_origin = round(max(size)/2)
+    pt_origin = np.array([int(x_origin), int(y_origin)])
+    world_pts = []
+    for i in range(0,dim[0]):
+        rel_pos_px = pt_origin - np.array([pts[i,0],pts[i,1]])
+        rel_pos_3d = (rel_pos_px[0]*horiz_ratio,rel_pos_px[1]*vert_ratio,0.001)
+        world_pts.append(rel_pos_3d)
+    return world_pts
