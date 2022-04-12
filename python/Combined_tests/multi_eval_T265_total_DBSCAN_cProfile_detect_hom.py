@@ -4,7 +4,7 @@ import numpy as np
 import h5py
 import crop
 import transform_mat as tm
-import detect_match_opt_cuda as det
+import detect_match_opt_hom as det
 import draw_transf as dw
 import cProfile
 from sklearn.cluster import DBSCAN

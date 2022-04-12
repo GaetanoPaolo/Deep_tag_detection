@@ -2,7 +2,10 @@ from matplotlib import pyplot as plt
 import cv2 as cv
 import numpy as np
 import h5py
-f = h5py.File('/home/gaetan/data/hdf5/T265_alt_DBSCAN_8repr_clust_solve_timing_detect_hom_alt_debug_4inlier.hdf5', 'r+')
+
+f = h5py.File('/home/gaetan/data/hdf5/T265_alt_DBSCAN_profile_total_cv_cuda_FAST_5_30inl.hdf5', 'r+')
+#f = h5py.File('/home/gaetan/data/hdf5/T265_alt_DBSCAN_profile_solvepnp_cuda.hdf5', 'r+')
+#f = h5py.File('/home/gaetan/data/hdf5/T265_alt_DBSCAN_8repr_clust_solve_timing_detect_hom_alt_debug.hdf5', 'r+')
 base_items = list(f.items())
 dset2 = f.get(base_items[0][0])
 trans_est_orb = np.array(dset2.get('trans_est_orb'))
@@ -98,7 +101,7 @@ fig, axd = plt.subplot_mosaic([['first'],
                                ['third'],
                                ['fourth']])
 l1, = axd['first'].plot(range(begin,size[0]),tot_timing[begin:end],'.')
-axd['first'].set_ylim([0,0.5])
+axd['first'].set_ylim([0,0.05])
 axd['first'].set_title('Algorithm timing')
 axd['second'].set_title('x-axis tag pos relative to camera over timesamples')
 l2, = axd['second'].plot(range(begin,size[0]),trans_est_orb[begin:end,0],'.',label = 'ORB')

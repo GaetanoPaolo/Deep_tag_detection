@@ -18,5 +18,5 @@ def transf_mat(q,p):
     T = np.matrix([[a11, a12, a13, p[0]],
                       [a21, a22, a23, p[1]],
                       [a31, a32, a33, p[2]],
-                      [0,0,0,1]])
+                      [0,0,0,1]],dtype = np.float32)
     return T

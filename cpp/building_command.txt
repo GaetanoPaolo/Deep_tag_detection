@@ -1,1 +1,1 @@
- c++ -O3 -Wall -shared -std=c++11 -fPIC $(python3 -m pybind11 --includes) solvepnp_gpu.cpp -o solvepnp_gpu$(python3-config --extension-suffix)
+c++ -O3 -Wall -shared -std=c++11 -fPIC $(python3 -m pybind11 --includes) solvepnp_gpu.cpp `pkg-config --libs --cflags opencv4` -o solvepnp_gpu.so

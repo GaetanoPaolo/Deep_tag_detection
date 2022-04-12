@@ -1,25 +1,25 @@
-import cv2 as cv
 from matplotlib import pyplot as plt
+import cv2 as cv
 import numpy as np
 import h5py
 import crop
 import transform_mat as tm
-import detect_match_opt_hom as det
+import detect_match_opt_cuda as det
 import draw_transf as dw
 import cProfile
 from sklearn.cluster import DBSCAN
 import time
-import concurrent.futures
+import solvepnp_gpu
 #load the logo templates corresponding to different percentages of kept
 #resolution from the original logo
 logo_temp_1 = cv.imread('/home/gaetan/code/simulation_ws/src/my_simulations/models/psi_logo/materials/textures/poster-psi-drone-logo-1percent.png',0)
-#logo_temp_1 = crop.crop_img(logo_temp_1,1)
+logo_temp_1 = crop.crop_img(logo_temp_1,1)
 logo_temp_2 = cv.imread('/home/gaetan/code/simulation_ws/src/my_simulations/models/psi_logo/materials/textures/poster-psi-drone-logo-2percent.png',0)
-#logo_temp_2 = crop.crop_img(logo_temp_2,2)
+logo_temp_2 = crop.crop_img(logo_temp_2,2)
 logo_temp_5 = cv.imread('/home/gaetan/code/simulation_ws/src/my_simulations/models/psi_logo/materials/textures/poster-psi-drone-logo-5percent.png',0)
-#logo_temp_5 = crop.crop_img(logo_temp_5,5)
+logo_temp_5 = crop.crop_img(logo_temp_5,5)
 logo_temp_10 = cv.imread('/home/gaetan/code/simulation_ws/src/my_simulations/models/psi_logo/materials/textures/poster-psi-drone-logo-10percent.png',0)
-#logo_temp_10 = crop.crop_img(logo_temp_10,10)
+logo_temp_10 = crop.crop_img(logo_temp_10,10)
 
 # load the camera parameters stored in episode 1
 f = h5py.File('/home/gaetan/data/hdf5/T265/data4_sync.hdf5', 'r+')
@@ -57,11 +57,10 @@ def pose_est(kp_temp_orb_1, des_temp_orb_1,kp_temp_orb_2, des_temp_orb_2,
              logo_temp_1_shape,logo_temp_2_shape,logo_temp_5_shape,logo_temp_10_shape,
              K,orb,bf_HAMMING,src_gray):
     if rel_pos_c[2] < 3.0:
-        try:
-            zerarr = np.array([[0.0],
-                                [0.0],
-                                [0.0]])
             #computing ORB estimates for all different resolution percentages
+            zerarr = np.array([[0.0],
+                    [0.0],
+                    [0.0]])
             src_gray_2 = src_gray[144:657,144:705]
             kp_target, des_target = orb.detectAndCompute(src_gray_2,None)
             if len(kp_target) == 0:
@@ -69,15 +68,14 @@ def pose_est(kp_temp_orb_1, des_temp_orb_1,kp_temp_orb_2, des_temp_orb_2,
             #https://learnopencv.com/getting-started-opencv-cuda-module/
             #https://docs.opencv.org/4.x/d5/dc3/group__cudalegacy.html
             #https://developer.nvidia.com/cuda-gpus
-            pos_temp_1,pos_target_1, inlier_am_1,mask_1= det.detect_match(logo_temp_1,kp_temp_orb_1,des_temp_orb_1,logo_temp_1_shape,kp_target,des_target,bf_HAMMING,src_gray)
-            pos_temp_2,pos_target_2, inlier_am_2,mask_2= det.detect_match(logo_temp_2,kp_temp_orb_2,des_temp_orb_2,logo_temp_2_shape,kp_target,des_target,bf_HAMMING,src_gray)
-            pos_temp_5,pos_target_5, inlier_am_5,mask_5= det.detect_match(logo_temp_5,kp_temp_orb_5,des_temp_orb_5,logo_temp_5_shape,kp_target,des_target,bf_HAMMING,src_gray)
-            pos_temp_10,pos_target_10,inlier_am_10,mask_10 = det.detect_match(logo_temp_10,kp_temp_orb_10,des_temp_orb_10,logo_temp_10_shape,kp_target,des_target,bf_HAMMING,src_gray)
-            mask_lst = [mask_1,mask_2,mask_5,mask_10]
+            est_orb_1, inlier_am_1= det.detect_match(K,kp_temp_orb_1,des_temp_orb_1,logo_temp_1_shape,kp_target,des_target,bf_HAMMING,src_gray)
+            est_orb_2, inlier_am_2= det.detect_match(K,kp_temp_orb_2,des_temp_orb_2,logo_temp_2_shape,kp_target,des_target,bf_HAMMING,src_gray)
+            est_orb_5, inlier_am_5= det.detect_match(K,kp_temp_orb_5,des_temp_orb_5,logo_temp_5_shape,kp_target,des_target,bf_HAMMING,src_gray)
+            est_orb_10,inlier_am_10 = det.detect_match(K,kp_temp_orb_10,des_temp_orb_10,logo_temp_10_shape,kp_target,des_target,bf_HAMMING,src_gray)
+
+            est_orb_lst = [est_orb_1,est_orb_2,est_orb_5,est_orb_10]
             inlier_am_lst = [inlier_am_1,inlier_am_2,inlier_am_5,inlier_am_10]
-            temp_lst = [pos_temp_1,pos_temp_2,pos_temp_5,pos_temp_10]
-            target_lst = [pos_target_1,pos_target_2,pos_target_5,pos_target_10]
-            shapes = [logo_temp_1_shape,logo_temp_2_shape,logo_temp_5_shape,logo_temp_10_shape]
+            idx = 0
             if sum(inlier_am_lst) == 0:
                 trans = zerarr
             else:
@@ -85,31 +83,21 @@ def pose_est(kp_temp_orb_1, des_temp_orb_1,kp_temp_orb_2, des_temp_orb_2,
                 if inlier_am_lst[idx] < 4:
                     trans = zerarr
                 else:
-                    pos_temp = temp_lst[idx]
-                    pos_target = target_lst[idx]
-                    cur_mask = mask_lst[idx]
-                    #selecting which orb estimate is closest to the altitude estimated on drone 
-                    # (assuming this provides a measure of the general accuracy)
-                    # est_sift_res = det.resolution_sel(est_sift_lst,rel_pos_c)
-                    #est_orb_res = det.resolution_sel(est_orb_lst,rel_pos_c)
-                    # trans_est_sift.append(list(est_sift_res.astype(np.float64)))
-                    #apply solvepnp to estimate translation: https://learnopencv.com/head-pose-estimation-using-opencv-and-dlib/
-                    #try:
-                    pos_temp_inlier = []
-                    pos_target_inlier = []
-                    for i in range(0,len(cur_mask)):
-                        if cur_mask[i] == 1:
-                            pos_temp_inlier.append(pos_temp[i])
-                            pos_target_inlier.append(pos_target[i])
-                    pos_temp_world  = dw.world_coord_tup(np.array(pos_temp_inlier),shapes[idx])
-                    dist_coeffs = np.zeros((4,1))
-                    (suc,rot,trans) = cv.solvePnP(np.array(pos_temp_world), np.array(pos_target_inlier), K, dist_coeffs, flags=cv.SOLVEPNP_ITERATIVE)
-                #     return zerarr,[]
-        except:
-            trans = zerarr
-        est_orb_res = np.append(trans,np.zeros((1,1)),axis = 0)
+                    trans = est_orb_lst[idx]
+            est_orb_res = np.append(trans,np.array([[1]])*idx,axis = 0)
+            #computing SIFT estimate for 2 percent resolution (for scale invariance performance test)
+            # est_sift_1,inliers = det.detect_match(K,kp_temp_sift_1,des_temp_sift_1,logo_temp_1.shape,sift,bf_L2,src_gray)
+            # est_sift_2,inliers = det.detect_match(K,kp_temp_sift_2,des_temp_sift_2,logo_temp_2.shape,sift,bf_L2,src_gray)
+            # est_sift_5,inliers = det.detect_match(K,kp_temp_sift_5,des_temp_sift_5,logo_temp_5.shape,sift,bf_L2,src_gray)
+            # est_sift_10,inliers = det.detect_match(K,kp_temp_sift_10,des_temp_sift_10,logo_temp_10.shape,sift,bf_L2,src_gray)
+            # est_sift_lst = [est_sift_1,est_sift_2,est_sift_5,est_sift_10]
+            #selecting which orb estimate is closest to the altitude estimated on drone 
+            # (assuming this provides a measure of the general accuracy)
+            # est_sift_res = det.resolution_sel(est_sift_lst,rel_pos_c)
+            #est_orb_res = det.resolution_sel(est_orb_lst,rel_pos_c)
+            # trans_est_sift.append(list(est_sift_res.astype(np.float64)))
     else:
-        try:
+        #try:
             temp_size = logo_temp_2_shape
             src_gray = src_gray[144:657,144:705]
             kp_target, des_target = orb.detectAndCompute(src_gray,None)
@@ -233,23 +221,22 @@ def pose_est(kp_temp_orb_1, des_temp_orb_1,kp_temp_orb_2, des_temp_orb_2,
                 # print(dst_temp)
                 rot = 0
                 pos_temp =  corn_temp + pos_temp
-                dist_coeffs = np.array([-0.014216,0.060412,-0.054711,0.011151])
+                dist_coeffs = np.zeros((4,1))
+                candidate_trans = []
                 inlier_arr = [0]
                 pts_arr = []
-                mask_arr = []
                 for shift in range(0,4):
                     ordered_pts_2 = list(np.roll(np.array(ordered_pts),-rot_step*shift,axis = 0))
+                    pos_temp_world, wolrd_pts = dw.world_coord(np.array(pos_temp),logo_temp_2_shape,rot)
                     pos_target_2 = ordered_pts_2 + pos_target
-                    dst_pts = np.float32(pos_target_2).reshape(-1,1,2)
-                    src_pts = np.float32(pos_temp).reshape(-1,1,2)
-                    M, mask = cv.findHomography(src_pts, dst_pts, cv.RANSAC,2.0)
-                    inliers = np.sum(mask,axis = 0)
-                    #(suc,angle,trans,inliers) = cv.solvePnPRansac(pos_temp_world, np.array(pos_target_2), K, dist_coeffs, flags=cv.SOLVEPNP_ITERATIVE, iterationsCount=2000, reprojectionError=8.0)
-                    if inliers is not None:
-                        if len(inliers) >= max(inlier_arr):
-                            pts_arr.append(pos_target_2)
-                            mask_arr.append(mask)
-                        inlier_arr.append(len(inliers))
+                    solve_res = solvepnp_gpu.solvepnp_gpu(200,0.02,10,len(pos_target_2),pos_temp_world, np.array(pos_target_2,dtype=np.float32), K, dist_coeffs)
+                    trans = np.reshape(np.array(solve_res[0:3]),(3,1))
+                    inliers = solve_res[3]
+                    if inliers > 0:
+                        if inliers >= max(inlier_arr):
+                            candidate_trans.append(trans)
+                            pts_arr.append(ordered_pts_2)
+                        inlier_arr.append(inliers)
                 kp_dist_diff = []
                 if len(pts_arr) == 0:
                     trans = np.zeros((3,1))
@@ -262,26 +249,16 @@ def pose_est(kp_temp_orb_1, des_temp_orb_1,kp_temp_orb_2, des_temp_orb_2,
                         dst_target = np.array([dst1,dst2])
                         diff = np.linalg.norm(np.subtract(dst_temp,dst_target))
                         kp_dist_diff.append(diff)
-                    chosen_it = kp_dist_diff.index(min(kp_dist_diff))
-                    chosen_mask = mask_arr[chosen_it]
-                    chosen_target_pts = pts_arr[chosen_it]
-                    pos_temp_inlier = []
-                    pos_target_inlier = []
-                    for i in range(0,len(chosen_mask)):
-                        if chosen_mask[i] == 1:
-                            pos_temp_inlier.append(pos_temp[i])
-                            pos_target_inlier.append(chosen_target_pts[i])
-                    pos_temp_world = dw.world_coord_tup(np.array(pos_temp_inlier),logo_temp_2_shape)
-                    (suc,rot,trans) = cv.solvePnP(np.array(pos_temp_world), np.array(pos_target_inlier), K, dist_coeffs, flags=cv.SOLVEPNP_ITERATIVE)
+                    trans = candidate_trans[kp_dist_diff.index(min(kp_dist_diff))]
                 est_orb_res = np.append(trans,np.zeros((1,1)),axis = 0)
                 # print('Chosen rotation')
                 # print(pts_arr[kp_dist_diff.index(min(kp_dist_diff))])
             else:
                 trans = np.zeros((3,1))
                 est_orb_res = np.append(trans,np.zeros((1,1)),axis = 0)
-        except:
-            trans = np.zeros((3,1))
-        est_orb_res = np.append(trans,np.zeros((1,1)),axis = 0)
+        # except:
+        #     trans = np.zeros((3,1))
+        #     est_orb_res = np.append(trans,np.zeros((1,1)),axis = 0)
     return est_orb_res
 
 
@@ -304,7 +281,7 @@ for ep in range(1,2):
     pose_stamp = np.array(dset2.get('pose_time'))
     set_size = imgs.shape
     #for observed_pos in range(0,set_size[0]):
-    for observed_pos in range(130,131):
+    for observed_pos in range(150,151):
         src = imgs[observed_pos,:,:,:]*255
         src_gray = np.uint8(src)
         #computing the estimated tag position relative to the camera (from drone world axes position estimate)
@@ -321,22 +298,21 @@ for ep in range(1,2):
         # print('GT approx')
         # print(rel_pos_c)
         drone_est.append(list(rel_pos_c.astype(np.float64)))
-        cProfile.run("pose_est(kp_temp_orb_1, des_temp_orb_1,kp_temp_orb_2, des_temp_orb_2, kp_temp_orb_5, des_temp_orb_5,kp_temp_orb_10, des_temp_orb_10,logo_temp_1.shape,logo_temp_2.shape,logo_temp_5.shape,logo_temp_10.shape, K,orb,bf_HAMMING,src_gray)",
-                    "detect_parallel_hom_pose_est_below_3m_130.dat")
-        # start = time.time()
-        # est_orb_res = pose_est(kp_temp_orb_1, des_temp_orb_1,kp_temp_orb_2, des_temp_orb_2, kp_temp_orb_5, des_temp_orb_5,kp_temp_orb_10, des_temp_orb_10,logo_temp_1.shape,logo_temp_2.shape,logo_temp_5.shape,logo_temp_10.shape, K,orb,bf_HAMMING,src_gray)
-        # #print(est_orb_res)
-        # end = time.time()
-        # timing = end - start
-        # tot_timing.append(timing)
-        # trans_est_orb.append(list(est_orb_res.astype(np.float64)))
+        # cProfile.run("pose_est(kp_temp_orb_1, des_temp_orb_1,kp_temp_orb_2, des_temp_orb_2, kp_temp_orb_5, des_temp_orb_5,kp_temp_orb_10, des_temp_orb_10,logo_temp_1.shape,logo_temp_2.shape,logo_temp_5.shape,logo_temp_10.shape, K,orb,bf_HAMMING,src_gray)",
+        #             "cuda_solve_pose_est_below_3m_150.dat")
+        start = time.time()
+        est_orb_res = pose_est(kp_temp_orb_1, des_temp_orb_1,kp_temp_orb_2, des_temp_orb_2, kp_temp_orb_5, des_temp_orb_5,kp_temp_orb_10, des_temp_orb_10,logo_temp_1.shape,logo_temp_2.shape,logo_temp_5.shape,logo_temp_10.shape, K,orb,bf_HAMMING,src_gray)
+        end = time.time()
+        timing = end - start
+        tot_timing.append(timing)
+        trans_est_orb.append(list(est_orb_res.astype(np.float64)))
 
 # hdf5_data = {"trans_est_orb": trans_est_orb,"drone_est":drone_est, 'timing':tot_timing}
 # #exporting the computations to hdf5
 # current_dir = '/home/gaetan/data/hdf5/'
 # def dump(output_dir,hdf5_data,ep):
 #         print('stored data in',output_dir)
-#         output_hdf5_path = output_dir + '/T265_alt_DBSCAN_8repr_clust_solve_timing_detect_hom_alt_debug_4inlier' + '.hdf5'
+#         output_hdf5_path = output_dir + '/T265_alt_DBSCAN_profile_solvepnp_cuda' + '.hdf5'
 #         hdf5_file = h5py.File(output_hdf5_path, "a")
 #         episode_group = hdf5_file.create_group(str(ep))
 #         for sensor_name in hdf5_data.keys():
@@ -344,7 +320,7 @@ for ep in range(1,2):
 #                 sensor_name, data=np.stack(hdf5_data[sensor_name])
 #             )
 #         hdf5_file.close()
-# dump(current_dir,hdf5_data,'T265_alt_DBSCAN_8repr_clust_solve_timing_detect_hom_alt_debug_4inlier')
+# dump(current_dir,hdf5_data,'T265_alt_DBSCAN_profile_solvepnp_cuda')
 
 
 

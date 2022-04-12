@@ -6,17 +6,17 @@ import crop
 import itertools
 import draw_transf as dw
 import transform_mat as tm
-import solvepnp_gpu
-def detect_match(K,kp_temp,des_temp,temp_shape,kp_target,des_target,bf,src_gray):
+from matplotlib import pyplot as plt
+
+def detect_match(logo_temp,kp_temp,des_temp,temp_shape,kp_target,des_target,bf,src_gray):
     #keep only a square inside the round camera capture to avoid detections at the edge of the lens
     src_gray = src_gray[144:657,144:705]
-    zerarr = np.array([[0.0],
-                            [0.0],
-                            [0.0]])
     #kp_target, des_target = detector.detectAndCompute(src_gray,None)
     #try:
     matches = bf.match(des_temp, des_target)
     matches = sorted(matches,key=lambda x:x.distance)
+    # ORB_matches =cv.drawMatches(logo_temp, kp_temp, src_gray, kp_target, matches[0:len(matches)], None, flags=2)
+    # plt.imshow(ORB_matches),plt.show()
     pos_temp = []
     pos_target = []
     matched_temp_kpts = []
@@ -31,23 +31,15 @@ def detect_match(K,kp_temp,des_temp,temp_shape,kp_target,des_target,bf,src_gray)
         matched_target_kpts.append(kp_target[target_pt_idx])
         pos_temp.append(temp_coord)
         pos_target.append(target_coord)
-    #apply solvepnp to estimate translation: https://learnopencv.com/head-pose-estimation-using-opencv-and-dlib/
-    if len(pos_temp) < 4 or len(pos_target) < 4:
-        trans = zerarr
-        inliers = 0.0
-    else:
-        pos_temp_world, world_pts = dw.world_coord(np.array(pos_temp),temp_shape,0)
-        dist_coeffs = np.zeros((4,1))
-        solve_res = solvepnp_gpu.solvepnp_gpu(200,0.02,10,len(pos_target),pos_temp_world, np.array(pos_target,dtype=np.float32), K, dist_coeffs)
-        trans = np.reshape(np.array(solve_res[0:3]),(3,1))
-        inliers = solve_res[3]
-        if inliers == 0.0:
-            trans = zerarr
-        # elif inliers < 20.0:
-        #     trans = zerarr
-# except:
-#     return zerarr,[]
-    return trans,inliers
+    
+    dst_pts = np.float32(pos_target).reshape(-1,1,2)
+    #pos_temp_world = dw.world_coord_tup(np.array(pos_temp),temp_shape,0)
+    src_pts = np.float32(pos_temp).reshape(-1,1,2)
+    try: 
+        M, mask = cv.findHomography(src_pts, dst_pts, cv.RANSAC,2.0)
+    except:
+        mask = []
+    return pos_temp,pos_target,np.sum(mask,axis = 0), mask
 
 def resolution_sel(est_orb_lst,rel_pos_c):
     alt_diff = []

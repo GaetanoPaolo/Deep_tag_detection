@@ -7,7 +7,8 @@ import itertools
 import draw_transf as dw
 import transform_mat as tm
 import solvepnp_gpu
-def detect_match(K,kp_temp,des_temp,temp_shape,kp_target,des_target,bf,src_gray):
+from matplotlib import pyplot as plt
+def detect_match(K,kp_temp,des_temp,temp_shape,kp_target,des_target,bf,src_gray,logo_temp):
     #keep only a square inside the round camera capture to avoid detections at the edge of the lens
     src_gray = src_gray[144:657,144:705]
     zerarr = np.array([[0.0],
@@ -15,8 +16,21 @@ def detect_match(K,kp_temp,des_temp,temp_shape,kp_target,des_target,bf,src_gray)
                             [0.0]])
     #kp_target, des_target = detector.detectAndCompute(src_gray,None)
     #try:
-    matches = bf.match(des_temp, des_target)
+    # des_temp_cuda = cv.cuda_GpuMat()
+    # des_target_cuda = cv.cuda_GpuMat()
+    # des_temp_cuda.upload(des_temp)
+    # des_target_cuda.upload(des_target)
+    print('Kp amounts')
+    print(len(kp_temp))
+    print(len(kp_target))
+    matches_cuda = bf.matchAsync(des_temp, des_target)
+    #matches = matches_cuda.download()
+    matches = bf.matchConvert(matches_cuda)
     matches = sorted(matches,key=lambda x:x.distance)
+    ORB_matches =cv.drawMatches(logo_temp, kp_temp, src_gray, kp_target, matches[0:len(matches)], None, flags=2)
+    plt.imshow(ORB_matches),plt.show()
+    print('Match amount')
+    print(len(matches))
     pos_temp = []
     pos_target = []
     matched_temp_kpts = []
@@ -38,7 +52,7 @@ def detect_match(K,kp_temp,des_temp,temp_shape,kp_target,des_target,bf,src_gray)
     else:
         pos_temp_world, world_pts = dw.world_coord(np.array(pos_temp),temp_shape,0)
         dist_coeffs = np.zeros((4,1))
-        solve_res = solvepnp_gpu.solvepnp_gpu(200,0.02,10,len(pos_target),pos_temp_world, np.array(pos_target,dtype=np.float32), K, dist_coeffs)
+        solve_res = solvepnp_gpu.solvepnp_gpu(200,0.02,30,len(pos_target),pos_temp_world, np.array(pos_target,dtype=np.float32), K, dist_coeffs)
         trans = np.reshape(np.array(solve_res[0:3]),(3,1))
         inliers = solve_res[3]
         if inliers == 0.0:
@@ -47,6 +61,8 @@ def detect_match(K,kp_temp,des_temp,temp_shape,kp_target,des_target,bf,src_gray)
         #     trans = zerarr
 # except:
 #     return zerarr,[]
+    print(inliers)
+    print(trans)
     return trans,inliers
 
 def resolution_sel(est_orb_lst,rel_pos_c):
@@ -59,7 +75,7 @@ def resolution_sel(est_orb_lst,rel_pos_c):
     min_index = alt_diff. index(min_alt_diff) 
     
     #extending the orb estimate with the best resolution
-    res_list = [1,2,5,10]
+    res_list = [2,5,10]
     ext_orb_res = np.zeros((4,1))
     ext_orb_res[0:3,0] = np.squeeze(est_orb_lst[min_index],axis = 1)
     ext_orb_res[3,0] = res_list[min_index]

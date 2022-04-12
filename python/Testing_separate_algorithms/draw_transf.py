@@ -81,4 +81,4 @@ def world_coord(pts,temp,rot):
             rel_pos_px = pt_origin - np.array([-pts[i,0],pts[i,1]])
             rel_pos_3d = (rel_pos_px[0]*vert_ratio,rel_pos_px[1]*horiz_ratio,0.001)
             world_pts.append(rel_pos_3d)
-    return np.array(world_pts)
+    return np.array(world_pts,dtype=np.float32)
