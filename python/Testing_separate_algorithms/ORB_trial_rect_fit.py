@@ -11,13 +11,14 @@ import detect_match as dm
 from collections import deque
 import mip as mp
 #load the logo template
-logo_temp = cv.imread('/home/gaetan/code/simulation_ws/src/my_simulations/models/coca_cola_logo/materials/textures/cocacola_7perc.jpg',0)
+logo_temp = cv.imread('/home/gaetan/code/simulation_ws/src/my_simulations/models/psi_logo/materials/textures/cocacola_7perc.jpg',0)
 temp_size = logo_temp.shape
 rot = 0
 
 plt.imshow(logo_temp),plt.show()
 # load the labelled gazebo data
 f = h5py.File('/home/gaetan/data/hdf5/coca_cola_800res_alt_rot/data4_sync.hdf5', 'r+')
+#f = h5py.File('/media/gaetan/One Touch/hdf5/psi_800res_alt_rot/data4_sync.hdf5', 'r+')
 base_items = list(f.items())
 print(base_items)
 dset = f.get('9')

@@ -59,10 +59,7 @@ print(len(matches))
 ORB_matches =cv.drawMatches(logo_temp, kp_temp, src_gray, kp_target, matches[0:len(matches)], None, flags=2)
 plt.imshow(ORB_matches),plt.show()
 
-pos_temp = []
-pos_target = []
-#2) approximating camera parameters, will be approximated again during solvepnp
-# if result incorrect => calibrate camera_
+pos_temp = []input_kp
 # fx = 119
 # fy = 119
 horizontal_field_of_view = (80 * img_size[1]/img_size[0]) * 3.14 / 180

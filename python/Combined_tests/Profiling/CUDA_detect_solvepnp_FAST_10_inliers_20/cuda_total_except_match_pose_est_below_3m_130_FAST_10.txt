@@ -1,0 +1,96 @@
+Mon Apr 18 12:21:44 2022    cuda_total_except_match_pose_est_below_3m_130_FAST_10.dat
+
+         2114 function calls (2113 primitive calls) in 0.037 seconds
+
+   Ordered by: internal time
+
+   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+        3    0.019    0.006    0.019    0.006 {method 'match' of 'cv2.DescriptorMatcher' objects}
+        3    0.012    0.004    0.012    0.004 {built-in method solvepnp_gpu.solvepnp_gpu}
+        1    0.003    0.003    0.003    0.003 {method 'detectAndComputeAsync' of 'cv2.cuda_Feature2DAsync' objects}
+      306    0.001    0.000    0.001    0.000 {built-in method numpy.array}
+        3    0.001    0.000    0.001    0.000 /home/gaetan/code/simulation_ws/python/Combined_tests/draw_transf.py:45(world_coord)
+        3    0.000    0.000    0.034    0.011 /home/gaetan/code/simulation_ws/python/Combined_tests/detect_match_opt_cuda.py:11(detect_match)
+        3    0.000    0.000    0.000    0.000 {built-in method builtins.sorted}
+        1    0.000    0.000    0.037    0.037 multi_eval_T265_total_DBSCAN_cProfile_detect_total_cuda_except_match_alt.py:75(pose_est)
+     1425    0.000    0.000    0.000    0.000 {method 'append' of 'list' objects}
+        1    0.000    0.000    0.037    0.037 {built-in method builtins.exec}
+        1    0.000    0.000    0.000    0.000 {method 'upload' of 'cv2.cuda_GpuMat' objects}
+        1    0.000    0.000    0.000    0.000 {method 'convert' of 'cv2.cuda_Feature2DAsync' objects}
+      285    0.000    0.000    0.000    0.000 /home/gaetan/code/simulation_ws/python/Combined_tests/detect_match_opt_cuda.py:20(<lambda>)
+        1    0.000    0.000    0.037    0.037 <string>:1(<module>)
+        1    0.000    0.000    0.000    0.000 {method 'download' of 'cv2.cuda_GpuMat' objects}
+        1    0.000    0.000    0.000    0.000 {built-in method builtins.sum}
+        3    0.000    0.000    0.000    0.000 <__array_function__ internals>:2(reshape)
+        3    0.000    0.000    0.000    0.000 {method 'reshape' of 'numpy.ndarray' objects}
+        3    0.000    0.000    0.000    0.000 /home/gaetan/.local/lib/python3.6/site-packages/numpy/core/fromnumeric.py:52(_wrapfunc)
+        6    0.000    0.000    0.000    0.000 {built-in method builtins.round}
+      5/4    0.000    0.000    0.000    0.000 {built-in method numpy.core._multiarray_umath.implement_array_function}
+        1    0.000    0.000    0.000    0.000 /home/gaetan/.local/lib/python3.6/site-packages/numpy/matrixlib/defmatrix.py:189(__getitem__)
+        3    0.000    0.000    0.000    0.000 /home/gaetan/.local/lib/python3.6/site-packages/numpy/core/fromnumeric.py:199(reshape)
+        7    0.000    0.000    0.000    0.000 {built-in method builtins.max}
+        1    0.000    0.000    0.000    0.000 <__array_function__ internals>:2(append)
+        1    0.000    0.000    0.000    0.000 /home/gaetan/.local/lib/python3.6/site-packages/numpy/lib/function_base.py:4616(append)
+        3    0.000    0.000    0.000    0.000 /home/gaetan/.local/lib/python3.6/site-packages/numpy/matrixlib/defmatrix.py:167(__array_finalize__)
+        3    0.000    0.000    0.000    0.000 {built-in method numpy.zeros}
+        3    0.000    0.000    0.000    0.000 {built-in method builtins.getattr}
+       14    0.000    0.000    0.000    0.000 {built-in method builtins.len}
+        6    0.000    0.000    0.000    0.000 {built-in method builtins.min}
+        1    0.000    0.000    0.000    0.000 <__array_function__ internals>:2(concatenate)
+        1    0.000    0.000    0.000    0.000 {method 'disable' of '_lsprof.Profiler' objects}
+        1    0.000    0.000    0.000    0.000 /home/gaetan/.local/lib/python3.6/site-packages/numpy/core/_asarray.py:86(asanyarray)
+        3    0.000    0.000    0.000    0.000 /home/gaetan/.local/lib/python3.6/site-packages/numpy/core/fromnumeric.py:194(_reshape_dispatcher)
+        4    0.000    0.000    0.000    0.000 {built-in method builtins.isinstance}
+        1    0.000    0.000    0.000    0.000 {method 'index' of 'list' objects}
+        1    0.000    0.000    0.000    0.000 /home/gaetan/.local/lib/python3.6/site-packages/numpy/lib/function_base.py:4612(_append_dispatcher)
+        1    0.000    0.000    0.000    0.000 /home/gaetan/.local/lib/python3.6/site-packages/numpy/core/multiarray.py:143(concatenate)
+
+
+Mon Apr 18 12:21:44 2022    cuda_total_except_match_pose_est_below_3m_130_FAST_10.dat
+
+         2114 function calls (2113 primitive calls) in 0.037 seconds
+
+   Ordered by: call count
+
+   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+     1425    0.000    0.000    0.000    0.000 {method 'append' of 'list' objects}
+      306    0.001    0.000    0.001    0.000 {built-in method numpy.array}
+      285    0.000    0.000    0.000    0.000 /home/gaetan/code/simulation_ws/python/Combined_tests/detect_match_opt_cuda.py:20(<lambda>)
+       14    0.000    0.000    0.000    0.000 {built-in method builtins.len}
+        7    0.000    0.000    0.000    0.000 {built-in method builtins.max}
+        6    0.000    0.000    0.000    0.000 {built-in method builtins.min}
+        6    0.000    0.000    0.000    0.000 {built-in method builtins.round}
+      5/4    0.000    0.000    0.000    0.000 {built-in method numpy.core._multiarray_umath.implement_array_function}
+        4    0.000    0.000    0.000    0.000 {built-in method builtins.isinstance}
+        3    0.000    0.000    0.000    0.000 {built-in method builtins.getattr}
+        3    0.000    0.000    0.000    0.000 {built-in method builtins.sorted}
+        3    0.012    0.004    0.012    0.004 {built-in method solvepnp_gpu.solvepnp_gpu}
+        3    0.001    0.000    0.001    0.000 /home/gaetan/code/simulation_ws/python/Combined_tests/draw_transf.py:45(world_coord)
+        3    0.000    0.000    0.034    0.011 /home/gaetan/code/simulation_ws/python/Combined_tests/detect_match_opt_cuda.py:11(detect_match)
+        3    0.019    0.006    0.019    0.006 {method 'match' of 'cv2.DescriptorMatcher' objects}
+        3    0.000    0.000    0.000    0.000 /home/gaetan/.local/lib/python3.6/site-packages/numpy/matrixlib/defmatrix.py:167(__array_finalize__)
+        3    0.000    0.000    0.000    0.000 /home/gaetan/.local/lib/python3.6/site-packages/numpy/core/fromnumeric.py:52(_wrapfunc)
+        3    0.000    0.000    0.000    0.000 /home/gaetan/.local/lib/python3.6/site-packages/numpy/core/fromnumeric.py:194(_reshape_dispatcher)
+        3    0.000    0.000    0.000    0.000 /home/gaetan/.local/lib/python3.6/site-packages/numpy/core/fromnumeric.py:199(reshape)
+        3    0.000    0.000    0.000    0.000 <__array_function__ internals>:2(reshape)
+        3    0.000    0.000    0.000    0.000 {method 'reshape' of 'numpy.ndarray' objects}
+        3    0.000    0.000    0.000    0.000 {built-in method numpy.zeros}
+        1    0.000    0.000    0.037    0.037 {built-in method builtins.exec}
+        1    0.000    0.000    0.000    0.000 {built-in method builtins.sum}
+        1    0.000    0.000    0.000    0.000 {method 'index' of 'list' objects}
+        1    0.000    0.000    0.037    0.037 <string>:1(<module>)
+        1    0.000    0.000    0.000    0.000 {method 'download' of 'cv2.cuda_GpuMat' objects}
+        1    0.000    0.000    0.000    0.000 {method 'upload' of 'cv2.cuda_GpuMat' objects}
+        1    0.000    0.000    0.000    0.000 {method 'convert' of 'cv2.cuda_Feature2DAsync' objects}
+        1    0.003    0.003    0.003    0.003 {method 'detectAndComputeAsync' of 'cv2.cuda_Feature2DAsync' objects}
+        1    0.000    0.000    0.000    0.000 /home/gaetan/.local/lib/python3.6/site-packages/numpy/lib/function_base.py:4612(_append_dispatcher)
+        1    0.000    0.000    0.000    0.000 /home/gaetan/.local/lib/python3.6/site-packages/numpy/lib/function_base.py:4616(append)
+        1    0.000    0.000    0.000    0.000 <__array_function__ internals>:2(append)
+        1    0.000    0.000    0.000    0.000 /home/gaetan/.local/lib/python3.6/site-packages/numpy/matrixlib/defmatrix.py:189(__getitem__)
+        1    0.000    0.000    0.000    0.000 {method 'disable' of '_lsprof.Profiler' objects}
+        1    0.000    0.000    0.000    0.000 /home/gaetan/.local/lib/python3.6/site-packages/numpy/core/_asarray.py:86(asanyarray)
+        1    0.000    0.000    0.000    0.000 /home/gaetan/.local/lib/python3.6/site-packages/numpy/core/multiarray.py:143(concatenate)
+        1    0.000    0.000    0.000    0.000 <__array_function__ internals>:2(concatenate)
+        1    0.000    0.000    0.037    0.037 multi_eval_T265_total_DBSCAN_cProfile_detect_total_cuda_except_match_alt.py:75(pose_est)
+
+

@@ -7,7 +7,8 @@ import itertools
 import draw_transf as dw
 import transform_mat as tm
 import solvepnp_gpu
-def detect_match(K,kp_temp,des_temp,temp_shape,kp_target,des_target,bf,src_gray):
+from matplotlib import pyplot as plt
+def detect_match(K,kp_temp,des_temp,temp_shape,kp_target,des_target,bf,src_gray, logo_temp):
     #keep only a square inside the round camera capture to avoid detections at the edge of the lens
     src_gray = src_gray[144:657,144:705]
     zerarr = np.array([[0.0],
@@ -17,6 +18,8 @@ def detect_match(K,kp_temp,des_temp,temp_shape,kp_target,des_target,bf,src_gray)
     #try:
     matches = bf.match(des_temp, des_target)
     matches = sorted(matches,key=lambda x:x.distance)
+    # ORB_matches =cv.drawMatches(logo_temp, kp_temp, src_gray, kp_target, matches[0:len(matches)], None, flags=2)
+    # plt.imshow(ORB_matches),plt.show()
     pos_temp = []
     pos_target = []
     matched_temp_kpts = []

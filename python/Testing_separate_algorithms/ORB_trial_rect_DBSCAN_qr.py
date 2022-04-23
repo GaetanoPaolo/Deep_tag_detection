@@ -22,10 +22,11 @@ rot = 0
 #logo_temp = crop.crop_img(logo_temp,2)
 plt.imshow(logo_temp),plt.show()
 # load the labelled gazebo data
-f = h5py.File('/home/gaetan/data/hdf5/psi_800res_alt_rot/data4_sync.hdf5', 'r+')
+#f = h5py.File('/home/gaetan/data/hdf5/psi_800res_alt_rot/data4_sync.hdf5', 'r+')
+f = h5py.File('/media/gaetan/One Touch/hdf5/psi_800res_alt_rot/data4_sync.hdf5', 'r+')
 base_items = list(f.items())
 print(base_items)
-dset = f.get('8')
+dset = f.get('12')
 imgs = np.array(dset.get('observation'))
 corn = np.array(dset.get('corners'))
 pos = np.array(dset.get('position'))
@@ -212,7 +213,7 @@ if len(matches) >= 2 and pos_origin_cam[observed_pos,2] > 3:
 
     # #plotting the obtained bounding box points
     img_cont1 = np.copy(src_gray)
-    cv.drawContours(img_cont1,[corn_target],0,(0,0,255),1)
+    cv.drawContours(img_cont1,[corn_target],0,(0,255,0),1)
     plt.imshow(img_cont1),plt.show()
     #rearranging BB points in clockwise direction
     # https://pyimagesearch.com/2016/03/21/ordering-coordinates-clockwise-with-python-and-opencv/ 
@@ -240,6 +241,10 @@ if len(matches) >= 2 and pos_origin_cam[observed_pos,2] > 3:
     point_amount = 4*rot_step
     ordered_pts = dm.rectangle_side_fractal(ordered_pts,point_amount)
     corn_temp = dm.rectangle_side_fractal(corn_temp,point_amount)
+    img_cont2 = np.copy(src_gray)
+    for i in ordered_pts:
+        img_cont2 = cv.circle(img_cont2, (int(i[0]),int(i[1])), radius=3, color=(0, 255, 0), thickness=-1)
+    plt.imshow(img_cont2),plt.show()
 
     #checking the mean keypoint distances relative to the centers of the long sides
     #long sides : 6, 14
@@ -260,7 +265,13 @@ if len(matches) >= 2 and pos_origin_cam[observed_pos,2] > 3:
     dst_temp = np.array([dst1,dst2])
     print('dst_temp')
     print(dst_temp)
-
+    
+    img_cont3 = np.copy(src_gray)
+    img_cont3 = cv.circle(img_cont3, (int(ordered_pts[idx1][0]),int(ordered_pts[idx1][1])), radius=3, color=(0, 255, 0), thickness=-1)
+    img_cont3 = cv.circle(img_cont3, (int(ordered_pts[idx2][0]),int(ordered_pts[idx2][1])), radius=3, color=(0, 255, 0), thickness=-1)
+    for i in pos_target:
+        img_cont3 = cv.circle(img_cont3, (int(i[0]),int(i[1])), radius=3, color=(0, 255, 0), thickness=-1)
+    plt.imshow(img_cont3),plt.show()
     
     pos_temp =  corn_temp + pos_temp
     pos_temp =  corn_temp

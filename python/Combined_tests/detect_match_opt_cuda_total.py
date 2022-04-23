@@ -27,8 +27,8 @@ def detect_match(K,kp_temp,des_temp,temp_shape,kp_target,des_target,bf,src_gray,
     #matches = matches_cuda.download()
     matches = bf.matchConvert(matches_cuda)
     matches = sorted(matches,key=lambda x:x.distance)
-    ORB_matches =cv.drawMatches(logo_temp, kp_temp, src_gray, kp_target, matches[0:len(matches)], None, flags=2)
-    plt.imshow(ORB_matches),plt.show()
+    # ORB_matches =cv.drawMatches(logo_temp, kp_temp, src_gray, kp_target, matches[0:len(matches)], None, flags=2)
+    # plt.imshow(ORB_matches),plt.show()
     print('Match amount')
     print(len(matches))
     pos_temp = []

@@ -3,7 +3,10 @@ import cv2 as cv
 import numpy as np
 import h5py
 
-f = h5py.File('/home/gaetan/data/hdf5/T265_alt_DBSCAN_profile_total_cv_cuda_FAST_5_30inl.hdf5', 'r+')
+#f = h5py.File('/home/gaetan/data/hdf5/multi_eval_T265_threshold_step_resolution_cuda_match_kp_alt.hdf5', 'r+')
+f = h5py.File('/home/gaetan/data/hdf5/multi_eval_T265_threshold_step_resolution.hdf5', 'r+')
+#f = h5py.File('/home/gaetan/data/hdf5/T265_alt_DBSCAN_profile_total_cv_cuda_except_match_FAST_20_JETSON.hdf5', 'r+')
+#f = h5py.File('/home/gaetan/data/hdf5/T265_alt_DBSCAN_profile_total_cv_cuda_FAST_5_30inl.hdf5', 'r+')
 #f = h5py.File('/home/gaetan/data/hdf5/T265_alt_DBSCAN_profile_solvepnp_cuda.hdf5', 'r+')
 #f = h5py.File('/home/gaetan/data/hdf5/T265_alt_DBSCAN_8repr_clust_solve_timing_detect_hom_alt_debug.hdf5', 'r+')
 base_items = list(f.items())
@@ -46,6 +49,7 @@ upper = 6
 begin = 100
 size = drone_est.shape
 end = size[0]
+param = 'ORB_create(2000,1.1,8,21,0,2,0,21,20)'
 #plot each axis along altitude
 fig, axd = plt.subplot_mosaic([#['zero'],
                                 ['first'],
@@ -68,7 +72,7 @@ axd['fourth'].set_title('Errors z-axis over altitude')
 l10, = axd['fourth'].plot(drone_est[begin:end,2],orb_true_err[begin:end,2], '.',label = 'ORB')
 axd['fourth'].legend([l10],['ORB','SIFT'])
 axd['fourth'].set_ylim([0,2])
-fig.suptitle('Estimation error for ORB and SIFT: ORB_create(2000,1.1,8,21,0,2,0,21,20)',fontsize=16)
+fig.suptitle('Estimation error for ORB:'+param,fontsize=16)
 plt.show()
 
 
@@ -92,7 +96,7 @@ l6, = axd['fourth'].plot(range(begin,size[0]),orb_true_err[begin:end,2],'.',labe
 axd['fourth'].legend([l6],['ORB'])
 axd['fourth'].set_ylim([0,2])
 #plt.ylim([0,20])
-fig.suptitle('Estimation error for ORB and SIFT: ORB_create(2000,1.1,8,21,0,2,0,21,20)',fontsize=16)
+fig.suptitle('Estimation error for ORB:'+param,fontsize=16)
 plt.show()
 
 #plot the estimated and true values for each axis
@@ -121,7 +125,7 @@ l10, = axd['fourth'].plot(range(begin,size[0]),drone_est[begin:end,2],label = 'G
 axd['fourth'].legend([l8,l10],['ORB','GT'])
 axd['fourth'].set_ylim([0,10])
 #axd['fourth'].set_xlim([400,600])
-fig.suptitle('Estimation position for ORB and SIFT: ORB_create(2000,1.1,8,21,0,2,0,21,20)',fontsize=16)
+fig.suptitle('Estimation position for ORB:'+param,fontsize=16)
 plt.show()
 
 #plot the estimated and true values for each axis zoom
@@ -130,7 +134,7 @@ fig, axd = plt.subplot_mosaic([['first'],
                                ['third'],
                                ['fourth']])
 l1, = axd['first'].plot(range(begin,size[0]),tot_timing[begin:end],'.')
-axd['first'].set_ylim([0,0.5])
+axd['first'].set_ylim([0,0.05])
 axd['first'].set_xlim([100,200])
 axd['first'].set_title('Algorithm timing')
 axd['second'].set_title('x-axis tag pos relative to camera over timesamples')
@@ -154,7 +158,7 @@ axd['fourth'].legend([l8,l10],['ORB','GT'])
 axd['fourth'].set_ylim([0,2])
 axd['fourth'].set_xlim([100,200])
 #axd['fourth'].set_xlim([400,600])
-fig.suptitle('Estimation position for ORB and SIFT: ORB_create(2000,1.1,8,21,0,2,0,21,20)',fontsize=16)
+fig.suptitle('Estimation position for ORB:'+param,fontsize=16)
 plt.show()
 
 #calculating mean error for each component
@@ -163,6 +167,7 @@ orb_pruned = np.delete(orb_true_err,del_orb,axis = 0)
 # Pie chart, where the slices will be ordered and plotted counter-clockwise:
 labels = 'Valid', 'non-valid'
 sizes = [len(orb_pruned), len(del_orb)-begin]
+print(sizes)
 explode = (0, 0.1)  # only "explode" the 2nd slice (i.e. 'Hogs')
 
 fig1, ax1 = plt.subplots()
